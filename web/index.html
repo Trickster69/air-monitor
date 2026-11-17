@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16100d">
+<title>Монитор воздуха</title>
+<style>
+:root{--bg:#120d0a;--card:#1d1511;--card2:#261c16;--line:#3a2d25;--cr:#f4e7d4;--dim:#a8998a;--am:#ffb54a;--tl:#4fb0b8;--rd:#e5483b;--gr:#7cc47a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--cr);background:radial-gradient(900px 500px at 50% -120px,#2a1c13,transparent) var(--bg);min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:18px 14px 120px}
+header{display:flex;align-items:center;gap:12px;margin:4px 4px 16px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#ffb54a,#e58a2a);display:grid;place-items:center;flex:none}
+h1{font-size:19px;margin:0;letter-spacing:.2px}
+.sub{font-size:13px;color:var(--dim)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+h2{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--dim);margin:0 0 12px;display:flex;align-items:center;gap:8px;font-weight:700}
+h2 .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{background:var(--card2);border-radius:12px;padding:10px 10px 9px;min-width:0}
+.tile b{display:block;font:600 22px/1.1 Georgia,"Times New Roman",serif;margin-top:3px;white-space:nowrap}
+.tile b small{font:500 11px system-ui,sans-serif;color:var(--dim);margin-left:3px}
+.tile span{font-size:11px;letter-spacing:.8px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+.tile i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:var(--tl)}
+.tile.w i{background:var(--am)}.tile.b i{background:var(--rd)}.tile.x i{background:#5a4a3e}.tile.x b{color:var(--dim)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:13px;color:var(--dim)}
+.meta b{color:var(--cr);font-weight:600}
+label.f{display:block;font-size:13px;color:var(--dim);margin:12px 0 6px}
+label.f:first-of-type{margin-top:0}
+input[type=text],input[type=password],input[type=number]{width:100%;height:48px;padding:0 14px;font:inherit;color:var(--cr);background:#130e0b;border:1px solid var(--line);border-radius:12px;outline:none}
+input:focus{border-color:var(--am);box-shadow:0 0 0 3px #ffb54a26}
+input::placeholder{color:#6f6156}
+.row{display:flex;gap:8px}.row>input{flex:1;min-width:0}
+.pw{position:relative}.pw input{padding-right:50px}
+.pw button{position:absolute;right:2px;top:2px;width:44px;height:44px;background:none;border:0;color:var(--dim);cursor:pointer;display:grid;place-items:center}
+.btn{height:48px;padding:0 16px;font:600 15px system-ui,sans-serif;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--cr);cursor:pointer;white-space:nowrap}
+.btn:active{transform:scale(.98)}.btn[disabled]{opacity:.5}
+.btn.p{background:var(--am);border-color:var(--am);color:#1a120c}
+.btn.d{color:#ff8b80;border-color:#5a2a25;background:#2a1512}
+.btn.s{height:36px;padding:0 12px;font-size:13px;border-radius:10px}
+.nets{margin:0 0 4px;padding:0;list-style:none;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.nets li{display:flex;align-items:center;gap:10px;padding:0 14px;height:46px;cursor:pointer;border-top:1px solid var(--line);background:#130e0b}
+.nets li:first-child{border-top:0}
+.nets li.on{background:#2b1f14;color:var(--am);font-weight:600}
+.nets li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nets li em{font-style:normal;font-size:12px;color:var(--dim)}
+.bars{display:flex;align-items:flex-end;gap:2px;height:14px}
+.bars u{width:3px;background:#5a4a3e;border-radius:1px}.bars u.y{background:currentColor}
+.hint{font-size:13px;color:var(--dim);margin-top:8px}
+.ok{color:var(--gr)}.er{color:#ff8b80}
+.sw{display:flex;align-items:center;gap:12px;min-height:44px;cursor:pointer}
+.sw span{flex:1}
+.sw input{appearance:none;-webkit-appearance:none;width:48px;height:28px;border-radius:14px;background:#3a2d25;position:relative;margin:0;transition:.2s;flex:none;cursor:pointer}
+.sw input:after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--cr);transition:.2s}
+.sw input:checked{background:var(--am)}.sw input:checked:after{left:23px;background:#1a120c}
+.th{display:grid;grid-template-columns:1fr 96px 48px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.th div b{display:block;font-weight:600}.th div small{color:var(--dim);font-size:12px}
+.th input[type=number]{height:42px;text-align:center;padding:0 6px}
+.off{opacity:.45;pointer-events:none}
+.pro-b{display:none;margin-left:8px;padding:2px 7px;border-radius:6px;background:var(--am);color:#1a120c;font-size:11px;font-weight:700;letter-spacing:.06em}
+.lockmsg{display:none;align-items:center;gap:10px;margin:2px 0 12px;padding:10px 12px;border-radius:12px;background:var(--card2);border:1px dashed var(--line);color:var(--dim);font-size:14px;line-height:1.35}
+.lockmsg a{margin-left:auto;white-space:nowrap;color:#1a120c;background:var(--am);border-radius:10px;padding:8px 12px;font-weight:600;text-decoration:none}
+.card.lock .pro-b{display:inline-block}.card.lock .lockmsg{display:flex}
+.card.lock>*:not(h2):not(.lockmsg){opacity:.32;pointer-events:none;filter:saturate(.4);user-select:none}
+.mk{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.mk:first-child{border-top:0}
+.disc{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font:800 15px system-ui,sans-serif;flex:none;box-shadow:inset 0 7px 9px #ffffff38,inset 0 -7px 9px #0000003d}
+.mk .nm{flex:1;min-width:0}
+.mk .nm input{height:30px;padding:0 8px;margin-left:-8px;border-radius:8px;font:700 15px system-ui,sans-serif;letter-spacing:.6px;background:transparent;border-color:transparent;text-transform:uppercase}
+.mk .nm input:focus{background:#130e0b;border-color:var(--am)}
+.mk .nm small{display:block;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk .nm small b{color:var(--am);font-weight:600}
+.ib{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--cr);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.ib[disabled]{opacity:.25}
+#sheet{position:fixed;inset:0;background:#000b;display:none;z-index:5}
+#sheet.v{display:block}
+#sheet>div{position:absolute;left:0;right:0;bottom:0;top:8vh;max-width:520px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:16px 16px 0;display:flex;flex-direction:column}
+#sheet h3{margin:0 0 12px;font-size:17px;display:flex;align-items:center}
+#sheet h3 button{margin-left:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.chips button{height:34px;padding:0 12px;border-radius:17px;border:1px solid var(--line);background:var(--card2);color:var(--cr);font:500 13px system-ui,sans-serif;cursor:pointer}
+#res{list-style:none;margin:10px -16px 0;padding:0 16px 24px;overflow-y:auto;flex:1}
+#res li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+#res li>div:not(.disc){flex:1;min-width:0}
+#res li b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#res li small{color:var(--dim);font-size:12px}
+#res li em{font-style:normal;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--tl);border:1px solid #2c5b60;border-radius:8px;padding:2px 7px;white-space:nowrap}
+#res .sub{padding:16px 0}
+.bind{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 14px;background:#130e0b;border:1px solid var(--line);border-radius:12px;font-size:14px;color:var(--dim)}.bind div{flex:1}.bind small{display:block;font-size:12px}
+details{margin-top:10px;font-size:14px;color:var(--dim)}
+details summary{cursor:pointer;color:var(--tl);list-style:none}
+details ol{margin:8px 0 0;padding-left:20px}details li{margin:4px 0}
+code{background:#130e0b;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--cr);font-size:13px}
+.file{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border:1px dashed #5a4a3e;border-radius:12px;color:var(--dim);cursor:pointer;overflow:hidden;white-space:nowrap}
+.file input{display:none}
+.prog{height:8px;background:#130e0b;border-radius:4px;overflow:hidden;margin-top:10px;display:none}.prog i{display:block;height:100%;width:0;background:var(--am);transition:width .2s}
+.svc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+footer{position:fixed;left:0;right:0;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 30%)}
+footer div{max-width:492px;margin:0 auto;display:flex;gap:8px}
+footer .p{flex:1;height:54px;font-size:17px;box-shadow:0 6px 24px #000a}
+footer .btn:not(.p){height:54px}
+#toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);background:#f4e7d4;color:#1a120c;padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.v{opacity:1;transform:translate(-50%,0)}
+#done{position:fixed;inset:0;background:var(--bg);display:none;place-items:center;text-align:center;padding:30px}
+#done b{display:block;font-size:22px;margin:14px 0 8px}
+@media(max-width:360px){.grid{grid-template-columns:repeat(2,1fr)}.th{grid-template-columns:1fr 80px 48px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a120c" stroke-width="2.4" stroke-linecap="round"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h7"/></svg></div>
+  <div><h1>Монитор воздуха</h1><div class="sub" id="where">настройки</div></div>
+</header>
+
+<section class="card">
+  <h2>Сейчас <span class="r" id="upd"></span></h2>
+  <div class="grid" id="live"></div>
+  <div class="meta" id="meta"></div>
+</section>
+
+<form id="f" autocomplete="off">
+<section class="card">
+  <h2>Wi-Fi <button type="button" class="btn s r" id="rescan">Обновить список</button></h2>
+  <ul class="nets" id="nets"></ul>
+  <label class="f" for="ssid">Имя сети — выберите из списка или впишите</label>
+  <input type="text" id="ssid" name="ssid" maxlength="31" autocapitalize="off" spellcheck="false">
+  <label class="f" for="password">Пароль</label>
+  <div class="pw"><input type="password" id="password" name="password" maxlength="63" autocapitalize="off" spellcheck="false"><button type="button" data-eye="password" aria-label="показать пароль"></button></div>
+  <div class="hint" id="pwhint"></div>
+</section>
+
+<section class="card" data-pro>
+  <h2>Погода и время<span class="pro-b">PRO</span></h2>
+  <div class="lockmsg"><span>🔒 Есть в PRO-версии</span><a class="prolink" target="_blank" rel="noopener">Получить PRO</a></div>
+  <label class="f" for="city">Город — по-русски или латиницей</label>
+  <div class="row"><input type="text" id="city" name="city" maxlength="31"><button type="button" class="btn" id="chk">Проверить</button></div>
+  <div class="hint" id="cityres">Часовой пояс прибор определит сам по городу.</div>
+</section>
+
+<section class="card" data-pro>
+  <h2>Рынки<span class="pro-b">PRO</span></h2>
+  <div class="lockmsg"><span>🔒 Есть в PRO-версии</span><a class="prolink" target="_blank" rel="noopener">Получить PRO</a></div>
+  <label class="sw"><span>Показывать экран с курсами</span><input type="checkbox" id="mk_on" name="mk_on"></label>
+  <div id="mkbox">
+    <div class="hint" style="margin:2px 0 6px">Пять активов на экране. Главный — на большой карточке, стрелка поднимает выше. Название можно переписать.</div>
+    <div id="mklist"></div>
+  </div>
+</section>
+
+<section class="card" data-pro>
+  <h2>Telegram<span class="pro-b">PRO</span></h2>
+  <div class="lockmsg"><span>🔒 Есть в PRO-версии</span><a class="prolink" target="_blank" rel="noopener">Получить PRO</a></div>
+  <label class="sw"><span>Присылать уведомления в Telegram</span><input type="checkbox" id="tg" name="telegram_enabled"></label>
+  <details style="margin:4px 0 12px"><summary>▸ Как подключить бота?</summary><ol>
+      <li>В Telegram найдите <code>@BotFather</code>, отправьте <code>/newbot</code>, придумайте имя.</li>
+      <li>Скопируйте токен, который он пришлёт, в поле выше.</li>
+      <li>Сохраните, откройте своего бота и отправьте ему <code>/bind</code> — прибор сам запомнит ваш чат, вписывать ничего не нужно.</li>
+    </ol></details>
+  <div id="tgbox">
+    <label class="f" for="tok">Токен бота</label>
+    <div class="pw"><input type="password" id="tok" name="telegram_token" maxlength="95" autocapitalize="off" spellcheck="false"><button type="button" data-eye="tok" aria-label="показать токен"></button></div>
+    <input type="hidden" id="chat" name="telegram_chat_id">
+    <div class="bind" id="bind"></div>
+    <label class="f" style="margin-top:16px">Когда писать — показатель выше порога</label>
+    <div class="th"><div><b>CO₂</b><small>ppm · душно от 1000</small></div><input type="number" name="th_co2" id="th_co2" min="600" max="5000" step="50" inputmode="numeric"><label class="sw"><input type="checkbox" name="al_co2" id="al_co2"></label></div>
+    <div class="th"><div><b>Пыль PM2.5</b><small>мкг/м³ · норма до 15</small></div><input type="number" name="th_pm" id="th_pm" min="5" max="500" inputmode="numeric"><label class="sw"><input type="checkbox" name="al_pm" id="al_pm"></label></div>
+    <div class="th"><div><b>VOC</b><small>индекс · обычный воздух 100</small></div><input type="number" name="th_voc" id="th_voc" min="110" max="500" step="10" inputmode="numeric"><label class="sw"><input type="checkbox" name="al_voc" id="al_voc"></label></div>
+    <button type="button" class="btn" id="tgtest" style="width:100%;margin-top:12px">Отправить тестовое сообщение</button>
+    <div class="hint" id="tgres"></div>
+  </div>
+</section>
+</form>
+
+<section class="card">
+  <h2>Прошивка <span class="r" id="fw"></span></h2>
+  <label class="file"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg><span id="fname">Выбрать файл прошивки .bin</span><input type="file" id="bin" accept=".bin"></label>
+  <button type="button" class="btn" id="flash" style="width:100%;margin-top:8px" disabled>Обновить прошивку</button>
+  <div class="prog" id="prog"><i></i></div>
+  <div class="hint" id="fwres">Настройки и история при обновлении сохраняются. Не отключайте питание.</div>
+</section>
+
+<section class="card">
+  <h2>Сервис</h2>
+  <div class="svc"><button type="button" class="btn" id="reboot">Перезагрузить</button><button type="button" class="btn d" id="reset">Сбросить настройки</button></div>
+</section>
+</main>
+
+<footer><div><button type="button" class="btn" id="exit" style="display:none">Выйти</button><button type="submit" form="f" class="btn p" id="save">Сохранить</button></div></footer>
+<div id="sheet"><div>
+  <h3><span id="sh_t">Выбрать актив</span><button type="button" class="btn s" id="sh_x">Закрыть</button></h3>
+  <input type="text" id="q" placeholder="Apple, TSLA, bitcoin, gold, EURUSD…" autocapitalize="off" autocomplete="off" spellcheck="false">
+  <div class="chips" id="chips"></div>
+  <ul id="res"></ul>
+</div></div>
+<div id="toast"></div>
+<div id="done"><div><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#ffb54a" stroke-width="2" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><b id="dt"></b><div class="sub" id="ds"></div></div></div>
+
+<script>
+// Демо-данные: показываются, когда страница открыта не с прибора (макет на компьютере)
+const DEMO={mode:"ap",fw:"2.5 · 17.11.2026",pro:!/[?&]free/.test(location.search),proUrl:"https://boosty.to/",up:186,wifi:{ok:true,ssid:"MyHome",rssi:-58,ip:"192.168.1.47"},
+ live:{co2:[742,0],pm:[6,0],t:[23.4,0],h:[48,0],voc:[112,0],nox:[1,0]},
+ cfg:{ssid:"MyHome",hasPass:true,city:"Moscow",cityShown:"Москва, Россия",tg:false,hasTok:false,chat:"",thCO2:1000,thPM:16,thVOC:250,alCO2:true,alPM:true,alVOC:true}};
+const POP=[["BTC-USD","БИТКОИН","BTC","c"],["ETH-USD","ЭФИР","ETH","c"],["SOL-USD","SOLANA","SOL","c"],["GC=F","ЗОЛОТО","XAU","f"],["SI=F","СЕРЕБРО","XAG","f"],["CL=F","НЕФТЬ","WTI","f"],["BZ=F","BRENT","BRENT","f"],["^GSPC","S&P 500","SPX","i"],["^IXIC","NASDAQ","IXIC","i"],["AAPL","APPLE","AAPL","e"],["NVDA","NVIDIA","NVDA","e"],["TSLA","TESLA","TSLA","e"],["EURUSD=X","EUR/USD","EURUSD","x"],["GEL=X","USD/GEL","USDGEL","x"]];
+const KN={c:"крипта",e:"акция",t:"фонд",i:"индекс",f:"фьючерс",x:"валюта"};
+const SPEC={"BTC-USD":["#F7931A","₿"],"ETH-USD":["#6F86F0","Ξ"],"GC=F":["#E2A52A","Au"],"CL=F":["#2C3038","💧"],"BZ=F":["#2C3038","💧"]};
+const MC=["#3B82C4","#8E5BD0","#2FA58A","#D0603A","#C24A7A","#5B6FD6","#3F9A4E","#B8862B"];
+let MK=[],slot=0,qt;
+DEMO.mk={on:true,list:POP.filter((x,i)=>[0,1,3,5,7].includes(i)).map((x,i)=>({s:x[0],n:x[1],t:x[2],k:x[3],p:[67250,3412.5,2380,78.4,5321][i],c:"USD"}))};
+const DEMO_NETS=[{s:"MyHome",r:-58,l:1},{s:"TP-Link_5F2A",r:-71,l:1},{s:"Keenetic-4412",r:-79,l:1},{s:"Guest",r:-86,l:0}];
+let demo=false,S;
+const $=id=>document.getElementById(id);
+const eyeOn='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("v");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("v"),2600)}
+async function api(u,o){if(demo)throw 0;const r=await fetch(u,Object.assign({cache:"no-store"},o));if(!r.ok)throw r.status;return r.json()}
+function bars(r){const n=r>-60?4:r>-70?3:r>-80?2:1;let h='<div class="bars">';for(let i=1;i<=4;i++)h+='<u style="height:'+(2+i*3)+'px"'+(i<=n?' class="y"':'')+'></u>';return h+'</div>'}
+function sig(r){return r>-60?"отличный":r>-70?"хороший":r>-80?"слабый":"очень слабый"}
+function upt(m){const d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?d+" д "+h+" ч":h?h+" ч "+m%60+" мин":m+" мин"}
+function live(){
+  const L=S.live,T=[["CO₂",L.co2,"ppm",0],["PM2.5",L.pm,"мкг",0],["Темп.",L.t,"°C",1],["Влага",L.h,"%",0],["VOC",L.voc,"",0],["NOx",L.nox,"",0]];
+  $("live").innerHTML=T.map(([n,v,u,d])=>{const ok=v&&v[0]!=null,c=!ok?"x":v[1]==2?"b":v[1]==1?"w":"";
+    return '<div class="tile '+c+'"><span><i></i>'+n+'</span><b>'+(ok?v[0].toFixed(d).replace(".",","):"—")+(ok&&u?'<small>'+u+'</small>':'')+'</b></div>'}).join("");
+  const w=S.wifi;
+  $("meta").innerHTML=(w.ok?'<span>Wi-Fi <b>'+w.ssid+'</b> · '+sig(w.rssi)+'</span><span>адрес <b>'+w.ip+'</b></span>':'<span class="er">Wi-Fi не подключён</span>')+'<span>работает <b>'+upt(S.up)+'</b></span>';
+  $("fw").textContent="версия "+S.fw;
+}
+function nets(a){
+  const cur=$("ssid").value;
+  $("nets").innerHTML=a.length?a.map(n=>'<li class="'+(n.s==cur?"on":"")+'" data-s="'+n.s.replace(/"/g,"&quot;")+'">'+bars(n.r)+'<span>'+n.s.replace(/</g,"&lt;")+'</span><em>'+(n.l?"":"открытая")+'</em></li>').join(""):'<li><span class="sub">Сети не найдены</span></li>';
+}
+async function scan(){
+  $("nets").innerHTML='<li><span class="sub">Ищу сети…</span></li>';
+  try{nets(await api("/api/scan"))}catch(e){demo?setTimeout(()=>nets(DEMO_NETS),500):nets([])}
+}
+function bind(){const c=$("chat").value;
+  $("bind").innerHTML=c?'<div><span class="ok">✓ Чат привязан</span><small>ID '+c.replace(/</g,"&lt;")+'</small></div><button type="button" class="btn s" id="unb">Отвязать</button>'
+    :'<div>Чат пока не привязан. Сохраните токен и отправьте своему боту <code>/bind</code> — прибор запомнит чат сам.</div>';
+  if(c)$("unb").onclick=()=>{$("chat").value="";bind();toast("Чат отвяжется после «Сохранить»")}}
+function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function fnv(t){let h=2166136261;for(const c of new TextEncoder().encode(t))h=Math.imul(h^c,16777619)>>>0;return h}
+function disc(m){const sp=SPEC[m.s];let c,g;                       // как на экране прибора: свой значок у известных, у остальных буква
+  if(sp){c=sp[0];g=sp[1]}else if(m.k=="i"||m.s[0]=="^"){c="#2F62C9";g="↗"}else{c=MC[fnv(m.s)%8];g=(m.n||m.t||"?")[0]}
+  return '<div class="disc" style="background:'+c+'">'+esc(g)+'</div>'}
+function clean(t){return t.toUpperCase().replace(/[^A-ZА-ЯЁ0-9 &.\/\-]/g,"").replace(/\s+/g," ").slice(0,12)}
+function label(n,tick){const t=clean(n.toUpperCase().replace(/[,.]? (INC|CORPORATION|CORP|LTD|LIMITED|PLC|HOLDINGS|GROUP|COMPANY|CO|N\.V|S\.A|AG|SE|USD|CLASS [A-Z])\b.*$/,"")).trim();return t||tick}
+function tickOf(s){return s.replace(/^\^/,"").replace(/(-USD|=F|=X)$/,"").slice(0,9)}
+function price(v){return v>=1000?Math.round(v).toLocaleString("ru-RU"):v.toFixed(v>=10?2:v>=1?3:4).replace(".",",")}
+function mkbox(){$("mkbox").classList.toggle("off",!$("mk_on").checked)}
+function mkrender(){
+  $("mklist").innerHTML=MK.map((m,i)=>'<div class="mk">'+disc(m)+'<div class="nm"><input type="text" name="mk_n'+i+'" data-i="'+i+'" maxlength="12" value="'+esc(m.n)+'" aria-label="название на экране">'
+    +'<small>'+(i?"":"<b>главный</b> · ")+esc(m.s)+" · "+(KN[m.k]||"")+(m.p?" · "+price(m.p)+(m.c&&m.c!="USD"?" "+esc(m.c):" $"):"")+'</small></div>'
+    +'<input type="hidden" name="mk_s'+i+'" value="'+esc(m.s)+'"><input type="hidden" name="mk_t'+i+'" value="'+esc(m.t)+'"><input type="hidden" name="mk_k'+i+'" value="'+esc(m.k)+'">'
+    +'<button type="button" class="ib" data-up="'+i+'"'+(i?"":" disabled")+' aria-label="выше"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg></button>'
+    +'<button type="button" class="btn s" data-ch="'+i+'">Заменить</button></div>').join("")}
+function sheet(i){slot=i;$("sh_t").textContent="Заменить «"+MK[i].n+"»";$("q").value="";$("res").innerHTML="";
+  $("chips").innerHTML=POP.map((x,j)=>'<button type="button" data-p="'+j+'">'+esc(x[1])+'</button>').join("");$("chips").style.display="";
+  $("sheet").classList.add("v");setTimeout(()=>$("q").focus(),50)}
+function pick(m){const j=MK.findIndex(x=>x.s==m.s);if(j>=0&&j!=slot)MK[j]=MK[slot];MK[slot]=m;$("sheet").classList.remove("v");mkrender();toast("«"+m.n+"» — не забудьте «Сохранить»")}
+async function msearch(){const q=$("q").value.trim(),r=$("res");$("chips").style.display=q?"none":"";if(!q){r.innerHTML="";return}
+  r.innerHTML='<li class="sub">Ищу…</li>';let a;
+  try{a=demo?POP.filter(x=>(x[0]+x[1]).toLowerCase().includes(q.toLowerCase())).map(x=>({s:x[0],n:x[1],k:x[3],e:"демо"})):await api("/api/msearch?q="+encodeURIComponent(q))}
+  catch(e){r.innerHTML='<li class="sub er">Нет интернета — поиск заработает, когда прибор подключится к Wi-Fi. Пока можно выбрать из популярных.</li>';$("chips").style.display="";return}
+  if(q!=$("q").value.trim())return;
+  r.innerHTML=a.length?a.map((x,j)=>'<li data-r="'+j+'">'+disc({s:x.s,n:label(x.n,tickOf(x.s)),k:x.k})+'<div><b>'+esc(x.n)+'</b><small>'+esc(x.s)+(x.e?" · "+esc(x.e):"")+'</small></div><em>'+(KN[x.k]||"")+'</em></li>').join(""):'<li class="sub">Ничего не нашлось — попробуйте название по-английски или тикер</li>';
+  r.a=a}
+function tgbox(){$("tgbox").classList.toggle("off",!$("tg").checked)}
+function fill(){
+  const c=S.cfg;
+  $("where").textContent=(S.mode=="ap"?"настройки · точка доступа прибора":"настройки · air.local")+(S.pro?" · PRO":" · бесплатная версия");
+  document.querySelectorAll("[data-pro]").forEach(e=>{e.classList.toggle("lock",!S.pro);e.querySelectorAll("input,button").forEach(i=>{if(!S.pro)i.disabled=true})});
+  document.querySelectorAll(".prolink").forEach(a=>{if(S.proUrl)a.href=S.proUrl;else a.style.display="none"});
+  $("exit").style.display=S.mode=="ap"?"":"none";
+  $("ssid").value=c.ssid;$("city").value=c.city;
+  $("password").placeholder=c.hasPass?"сохранён · пусто — не менять":"";
+  $("pwhint").textContent=S.wifi.ok?"":"Прибор не смог подключиться — проверьте пароль.";$("pwhint").className="hint er";
+  if(c.cityShown){$("cityres").innerHTML='<span class="ok">✓ '+c.cityShown+'</span> · часовой пояс определяется сам'}
+  $("mk_on").checked=S.mk.on;MK=S.mk.list.map(x=>Object.assign({},x));mkrender();mkbox();
+  $("tg").checked=c.tg;$("tok").placeholder=c.hasTok?"сохранён · пусто — не менять":"123456:ABC-DEF…";$("chat").value=c.chat;bind();
+  $("th_co2").value=c.thCO2;$("th_pm").value=c.thPM;$("th_voc").value=c.thVOC;
+  $("al_co2").checked=c.alCO2;$("al_pm").checked=c.alPM;$("al_voc").checked=c.alVOC;
+  tgbox();live();
+}
+function done(t,s){$("dt").textContent=t;$("ds").textContent=s;$("done").style.display="grid"}
+async function post(u,body){if(demo)return new Promise(r=>setTimeout(()=>r({ok:1}),600));const r=await fetch(u,{method:"POST",body});return r.json()}
+
+document.querySelectorAll("[data-eye]").forEach(b=>{b.innerHTML=eyeOn;b.onclick=()=>{const i=$(b.dataset.eye);i.type=i.type=="password"?"text":"password";b.style.color=i.type=="text"?"var(--am)":""}});
+$("nets").onclick=e=>{const li=e.target.closest("li[data-s]");if(!li)return;$("ssid").value=li.dataset.s;document.querySelectorAll("#nets li").forEach(x=>x.classList.toggle("on",x==li));$("password").value="";$("password").placeholder="";$("password").focus()};
+$("rescan").onclick=scan;$("tg").onchange=tgbox;$("mk_on").onchange=mkbox;
+$("mklist").onclick=e=>{const u=e.target.closest("[data-up]"),c=e.target.closest("[data-ch]");
+  if(u){const i=+u.dataset.up;[MK[i-1],MK[i]]=[MK[i],MK[i-1]];mkrender()}else if(c)sheet(+c.dataset.ch)};
+$("mklist").oninput=e=>{const i=e.target.dataset.i;if(i==null)return;const p=e.target.selectionStart;e.target.value=clean(e.target.value);e.target.setSelectionRange(p,p);MK[i].n=e.target.value};
+$("mklist").addEventListener("change",e=>{const i=e.target.dataset.i;if(i==null)return;if(!MK[i].n.trim())MK[i].n=MK[i].t;mkrender()});
+$("sh_x").onclick=()=>$("sheet").classList.remove("v");$("sheet").onclick=e=>{if(e.target.id=="sheet")$("sheet").classList.remove("v")};
+$("q").oninput=()=>{clearTimeout(qt);qt=setTimeout(msearch,400)};
+$("chips").onclick=e=>{const b=e.target.closest("[data-p]");if(b){const x=POP[+b.dataset.p];pick({s:x[0],n:x[1],t:x[2],k:x[3]})}};
+$("res").onclick=e=>{const li=e.target.closest("[data-r]");if(li){const x=$("res").a[+li.dataset.r],t=tickOf(x.s);pick({s:x.s,n:label(x.n,t),t:t,k:x.k})}};
+$("chk").onclick=async()=>{const q=$("city").value.trim(),r=$("cityres");if(!q)return;r.textContent="Ищу…";r.className="hint";
+  try{const j=demo?await new Promise(z=>setTimeout(()=>z({ok:1,name:"Москва, Россия"}),600)):await api("/api/city?q="+encodeURIComponent(q));
+    r.innerHTML=j.ok?'<span class="ok">✓ Найден: '+j.name+'</span>':'<span class="er">Такой город не нашёлся — проверьте название</span>'}
+  catch(e){r.innerHTML='<span class="er">Нет интернета — проверю после подключения к Wi-Fi</span>'}};
+$("tgtest").onclick=async()=>{const r=$("tgres");r.textContent="Отправляю…";r.className="hint";
+  try{const j=await post("/api/tgtest",new URLSearchParams(new FormData($("f"))));r.innerHTML=j.ok?'<span class="ok">✓ '+(j.msg||'Отправлено — проверьте Telegram')+'</span>':'<span class="er">'+(j.err||"Не получилось")+'</span>'}
+  catch(e){r.innerHTML='<span class="er">Нет связи с прибором</span>'}};
+$("bin").onchange=e=>{const f=e.target.files[0];$("fname").textContent=f?f.name+" · "+(f.size/1048576).toFixed(1)+" МБ":"Выбрать файл прошивки .bin";$("flash").disabled=!f};
+$("flash").onclick=()=>{const f=$("bin").files[0];if(!f||!confirm("Обновить прошивку файлом "+f.name+"?"))return;
+  const p=$("prog"),bar=p.firstChild;p.style.display="block";$("flash").disabled=true;
+  if(demo){let v=0;const t=setInterval(()=>{v+=8;bar.style.width=v+"%";if(v>=100){clearInterval(t);done("Прошивка обновлена","Прибор перезагружается…")}},120);return}
+  const x=new XMLHttpRequest(),d=new FormData();d.append("fw",f);x.open("POST","/update");
+  x.upload.onprogress=e=>bar.style.width=(e.loaded/e.total*100)+"%";
+  x.onload=()=>x.status==200?done("Прошивка обновлена","Прибор перезагружается…"):($("fwres").innerHTML='<span class="er">Не получилось: '+x.responseText+'</span>',$("flash").disabled=false);
+  x.onerror=()=>{$("fwres").innerHTML='<span class="er">Связь оборвалась — попробуйте ещё раз</span>';$("flash").disabled=false};x.send(d)};
+$("reboot").onclick=async()=>{if(confirm("Перезагрузить прибор?")){await post("/api/restart");done("Перезагружаюсь","Через 10 секунд прибор снова в работе.")}};
+$("reset").onclick=async()=>{if(confirm("Стереть Wi-Fi, город и Telegram? История показаний останется.")){await post("/api/reset");done("Настройки сброшены","Прибор перезагружается.")}};
+$("exit").onclick=async()=>{await post("/api/exit");done("Вышли без изменений","Прибор возвращается к работе.")};
+$("f").onsubmit=async e=>{e.preventDefault();
+  if(!$("ssid").value.trim()){toast("Укажите сеть Wi-Fi");$("ssid").focus();return}
+  if($("tg").checked&&!S.cfg.hasTok&&!$("tok").value.trim()){toast("Для Telegram нужен токен бота");$("tok").focus();return}
+  $("save").disabled=true;$("save").textContent="Сохраняю…";
+  try{const j=await post("/save",new URLSearchParams(new FormData($("f"))));
+    j.restart?done("Сохранено","Прибор перезагружается и подключается к «"+$("ssid").value+"».") :(toast("Сохранено"),$("save").disabled=false,$("save").textContent="Сохранить",$("password").value="",$("tok").value="",demo||(S=await api("/api/state"),fill()));
+    if(demo)done("Сохранено","Прибор перезагружается и подключается к «"+$("ssid").value+"».")}
+  catch(x){toast("Нет связи с прибором");$("save").disabled=false;$("save").textContent="Сохранить"}};
+(async()=>{try{S=await api("/api/state")}catch(e){demo=true;S=DEMO}
+  fill();scan();
+  if(!demo)setInterval(async()=>{try{const n=await api("/api/state");S.live=n.live;S.wifi=n.wifi;S.up=n.up;live();
+    if(!$("sheet").classList.contains("v")&&!$("mklist").contains(document.activeElement)){let ch=0;n.mk.list.forEach((x,i)=>{if(MK[i]&&MK[i].s==x.s&&MK[i].p!=x.p){MK[i].p=x.p;MK[i].c=x.c;ch=1}});if(ch)mkrender()}if(n.cfg.chat&&n.cfg.chat!=S.cfg.chat){S.cfg.chat=n.cfg.chat;$("chat").value=n.cfg.chat;bind();toast("Чат привязан")}}catch(e){}},5000)})();
+</script>
+</body>
+</html>

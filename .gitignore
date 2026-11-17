@@ -1,0 +1,16 @@
+# Публичный репозиторий air-monitor: в git попадает только то, что перечислено ниже.
+# src/pro — закрытый репозиторий air-monitor-pro (свой git внутри), сюда НЕ попадает.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/LICENSE
+!/esp32_TFT_air.ino
+!/*.h
+!/partitions.csv
+!/make_release.py
+!/web/
+/web/*
+!/web/index.html
+!/web/make_page.py
+!/docs/
