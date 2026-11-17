@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Монитор воздуха — прошивка</title>
-<meta name="description" content="Установка прошивки монитора воздуха на ESP32-S3 прямо из браузера">
+<meta name="description" content="Установка прошивки монитора воздуха на ESP32-S3 прямо из браузера · Air monitor firmware installer · Instalador del firmware">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23ffb54a'/%3E%3Cpath d='M4 9.5h10a3 3 0 1 0-3-3M4 14h13a3 3 0 1 1-3 3M4 18.5h6' fill='none' stroke='%231a120c' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
 <script type="module" src="https://unpkg.com/esp-web-tools@10.1.0/dist/web/install-button.js?module"></script>
 <style>
@@ -17,6 +17,10 @@ header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
 .logo{width:44px;height:44px;border-radius:12px;background:var(--am);display:grid;place-items:center;flex:none}
 h1{font-size:22px;margin:0;line-height:1.2}
 .sub{color:var(--dim);font-size:14px}
+.lang{margin-left:auto;position:relative;display:flex;align-items:center;gap:6px;height:38px;padding:0 10px 0 9px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--cr);font:700 13px system-ui,sans-serif;letter-spacing:.6px;flex:none;cursor:pointer;align-self:flex-start}
+.lang svg{flex:none}.lang .gl{color:var(--am)}.lang .ch{color:var(--dim)}
+.lang select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.lang:focus-within{border-color:var(--am);box-shadow:0 0 0 3px #ffb54a26}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:12px}
 h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 12px;display:flex;align-items:center;gap:8px}
 .tag{padding:2px 7px;border-radius:6px;background:var(--am);color:#1a120c;font-size:11px;font-weight:700;letter-spacing:.06em}
@@ -25,7 +29,7 @@ h3{font-size:20px;margin:0 0 4px}
 p{margin:0 0 12px}
 ol{margin:0;padding-left:20px}
 ol li{margin:6px 0}
-.btn{appearance:none;border:0;border-radius:12px;height:52px;padding:0 20px;width:100%;font-family:inherit;font-size:17px;font-weight:600;line-height:1;cursor:pointer;background:var(--am);color:#1a120c;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn{appearance:none;border:0;border-radius:12px;min-height:52px;padding:10px 20px;width:100%;font-family:inherit;font-size:17px;font-weight:600;line-height:1.2;cursor:pointer;background:var(--am);color:#1a120c;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center}
 .btn:hover{filter:brightness(1.07)}
 .btn:disabled{background:var(--card2);color:var(--dim);cursor:not-allowed;filter:none}
 .btn.g{background:var(--card2);color:var(--cr);border:1px solid var(--line)}
@@ -52,100 +56,160 @@ footer a{color:var(--dim)}
 <main>
 <header>
   <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a120c" stroke-width="2.4" stroke-linecap="round"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h7"/></svg></div>
-  <div><h1>Монитор воздуха — прошивка</h1><div class="sub">ESP32-S3 · прямо из браузера, без Arduino</div></div>
+  <div><h1 data-i="h1">Монитор воздуха — прошивка</h1><div class="sub" data-i="sub">ESP32-S3 · прямо из браузера, без Arduino</div></div>
+  <label class="lang" title="Язык · Language · Idioma"><svg class="gl" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.6 3.9 5.6 3.9 9.2s-1.3 6.6-3.9 9.2c-2.6-2.6-3.9-5.6-3.9-9.2s1.3-6.6 3.9-9.2z"/></svg><span id="langcur">RU</span><svg class="ch" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><select id="langsel" aria-label="Язык · Language · Idioma"><option value="ru">Русский</option><option value="en">English</option><option value="es">Español</option></select></label>
 </header>
 
-<div class="warn" id="nows" hidden>Этот браузер не умеет работать с USB-портом. Откройте страницу в <b>Chrome</b> или <b>Edge</b> на компьютере.</div>
+<div class="warn" id="nows" hidden data-i="nows">Этот браузер не умеет работать с USB-портом. Откройте страницу в <b>Chrome</b> или <b>Edge</b> на компьютере.</div>
 
 <section class="card">
-  <h2>Как это работает</h2>
+  <h2 data-i="how">Как это работает</h2>
   <ol>
-    <li>Подключите прибор к компьютеру USB-кабелем.</li>
-    <li>Нажмите кнопку установки ниже и выберите порт в списке.</li>
-    <li>Подождите около минуты. Прибор перезагрузится сам.</li>
+    <li data-i="s1">Подключите прибор к компьютеру USB-кабелем.</li>
+    <li data-i="s2">Нажмите кнопку установки ниже и выберите порт в списке.</li>
+    <li data-i="s3">Подождите около минуты. Прибор перезагрузится сам.</li>
   </ol>
-  <p class="note" style="margin:10px 0 0">Настройки Wi-Fi и история сохраняются, если не отмечать «Erase device» (стереть всё).</p>
+  <p class="note" style="margin:10px 0 0" data-i="keep">Настройки Wi-Fi и история сохраняются, если не отмечать «Erase device» (стереть всё).</p>
 </section>
 
 <section class="card">
-  <h2>Бесплатная версия <span class="tag f">FREE</span></h2>
-  <h3>Экран «Показатели»</h3>
-  <p class="sub">Все датчики на одном экране: CO₂, пыль PM2.5, VOC, NOx, температура и влажность. Страница настроек и обновление по Wi-Fi.</p>
-  <div class="ver"><span>Версия <b id="fv">…</b></span><span id="fdate"></span></div>
+  <h2><span data-i="freeh">Бесплатная версия</span> <span class="tag f">FREE</span></h2>
+  <h3 data-i="freet">Экран «Показатели»</h3>
+  <p class="sub" data-i="freed">Все датчики на одном экране: CO₂, пыль PM2.5, VOC, NOx, температура и влажность. Страница настроек и обновление по Wi-Fi.</p>
+  <div class="ver"><span><span data-i="ver">Версия</span> <b id="fv">…</b></span><span id="fdate"></span></div>
   <esp-web-install-button id="free" manifest="manifest.json">
-    <button slot="activate" class="btn">Установить бесплатную версию</button>
+    <button slot="activate" class="btn" data-i="freeb">Установить бесплатную версию</button>
     <span slot="unsupported"></span>
-    <span slot="not-allowed"><div class="warn">Страница должна быть открыта по https.</div></span>
+    <span slot="not-allowed"><div class="warn" data-i="https">Страница должна быть открыта по https.</div></span>
   </esp-web-install-button>
 </section>
 
 <section class="card">
-  <h2>PRO-версия <span class="tag">PRO</span></h2>
-  <h3>Все экраны</h3>
-  <p class="sub">Перекидные часы, индекс воздуха, графики за 12 часов, погода, курсы валют и акций, уведомления в Telegram. Файл прошивки — у подписчиков на Бусти.</p>
+  <h2><span data-i="proh">PRO-версия</span> <span class="tag">PRO</span></h2>
+  <h3 data-i="prot">Все экраны</h3>
+  <p class="sub" data-i="prod">Перекидные часы, индекс воздуха, графики за 12 часов, погода, курсы валют и акций, уведомления в Telegram. Файл прошивки — у подписчиков на Бусти.</p>
   <label class="drop" id="drop">
-    <b id="dname">Выберите или перетащите файл .bin</b>
-    <span id="dsub">файл PRO-прошивки с Бусти</span>
+    <b id="dname" data-i="dname">Выберите или перетащите файл .bin</b>
+    <span id="dsub" data-i="dsub">файл PRO-прошивки с Бусти</span>
     <input type="file" id="file" accept=".bin">
   </label>
   <esp-web-install-button id="pro">
-    <button slot="activate" class="btn" id="probtn" disabled>Установить из файла</button>
+    <button slot="activate" class="btn" id="probtn" disabled data-i="prob">Установить из файла</button>
     <span slot="unsupported"></span>
     <span slot="not-allowed"></span>
   </esp-web-install-button>
   <div class="msg" id="pmsg"></div>
-  <p class="note">Этот же файл можно залить без компьютера: на странице настроек прибора (<code>http://air.local</code>), раздел «Прошивка».</p>
+  <p class="note" data-i="ota">Этот же файл можно залить без компьютера: на странице настроек прибора (<code>http://air.local</code>), раздел «Прошивка».</p>
 </section>
 
 <section class="card">
-  <h2>Не получается?</h2>
-  <details><summary>Порта нет в списке</summary>
-    <p class="note" style="color:var(--cr)">Кабель может быть только для зарядки — возьмите другой. Если порт так и не появился, установите драйвер <b>CP210x</b> или <b>CH340</b> (зависит от платы) и переподключите прибор.</p></details>
-  <details><summary>Ошибка подключения или «Failed to initialize»</summary>
-    <p class="note" style="color:var(--cr)">Зажмите кнопку <b>BOOT</b> на плате, нажмите и отпустите <b>RESET</b> (или переподключите кабель), отпустите BOOT и попробуйте снова. Закройте Arduino IDE и другие программы, которые держат порт.</p></details>
-  <details><summary>После установки экран пустой</summary>
-    <p class="note" style="color:var(--cr)">Нажмите RESET или переподключите питание. Если прибор новый, он сам откроет точку доступа <b>ESP32-TFT-AIR</b> с QR-кодом на экране — по нему настраивается Wi-Fi.</p></details>
+  <h2 data-i="help">Не получается?</h2>
+  <details><summary data-i="q1">Порта нет в списке</summary>
+    <p class="note" style="color:var(--cr)" data-i="a1">Кабель может быть только для зарядки — возьмите другой. Если порт так и не появился, установите драйвер <b>CP210x</b> или <b>CH340</b> (зависит от платы) и переподключите прибор.</p></details>
+  <details><summary data-i="q2">Ошибка подключения или «Failed to initialize»</summary>
+    <p class="note" style="color:var(--cr)" data-i="a2">Зажмите кнопку <b>BOOT</b> на плате, нажмите и отпустите <b>RESET</b> (или переподключите кабель), отпустите BOOT и попробуйте снова. Закройте Arduino IDE и другие программы, которые держат порт.</p></details>
+  <details><summary data-i="q3">После установки экран пустой</summary>
+    <p class="note" style="color:var(--cr)" data-i="a3">Нажмите RESET или переподключите питание. Если прибор новый, он сам откроет точку доступа <b>ESP32-TFT-AIR</b> с QR-кодом на экране — по нему настраивается Wi-Fi.</p></details>
 </section>
 
-<footer>Прошивка ставится через <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a> · работает в Chrome и Edge на компьютере</footer>
+<footer data-i="foot">Прошивка ставится через <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a> · работает в Chrome и Edge на компьютере</footer>
 </main>
 
 <script>
 const $=id=>document.getElementById(id);
 if(!("serial" in navigator))$("nows").hidden=false;
 
+// ---- языки: русский текст лежит в разметке, английский и испанский — здесь; ключ — data-i
+const EWT='<a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a>';
+const TR={
+en:{title:"Air monitor — firmware",h1:"Air monitor — firmware",sub:"ESP32-S3 · right from the browser, no Arduino needed",
+ nows:"This browser can’t talk to USB ports. Open this page in <b>Chrome</b> or <b>Edge</b> on a computer.",
+ how:"How it works",s1:"Connect the device to your computer with a USB cable.",s2:"Click the install button below and pick the port from the list.",s3:"Wait about a minute. The device restarts by itself.",
+ keep:"Wi-Fi settings and history are kept as long as you don’t tick “Erase device”.",
+ freeh:"Free version",freet:"“Readings” screen",freed:"All sensors on one screen: CO₂, PM2.5 dust, VOC, NOx, temperature and humidity. Settings page and updates over Wi-Fi.",
+ ver:"Version",freeb:"Install the free version",https:"This page must be opened over https.",
+ proh:"PRO version",prot:"All screens",prod:"Flip clock, air index, 12-hour charts, weather, currency and stock prices, Telegram alerts. The firmware file is available to Boosty subscribers.",
+ dname:"Choose or drop a .bin file",dsub:"PRO firmware file from Boosty",prob:"Install from file",
+ ota:"You can also flash this file without a computer: on the device’s settings page (<code>http://air.local</code>), “Firmware” section.",
+ help:"Not working?",q1:"The port isn’t in the list",a1:"The cable may be charge-only — try another one. If the port still doesn’t show up, install the <b>CP210x</b> or <b>CH340</b> driver (depends on the board) and reconnect the device.",
+ q2:"Connection error or “Failed to initialize”",a2:"Hold the <b>BOOT</b> button on the board, press and release <b>RESET</b> (or reconnect the cable), release BOOT and try again. Close Arduino IDE and any other program that holds the port.",
+ q3:"The screen is blank after installing",a3:"Press RESET or reconnect the power. A new device opens its own access point <b>ESP32-TFT-AIR</b> with a QR code on the screen — scan it to set up Wi-Fi.",
+ foot:"Installed with "+EWT+" · works in Chrome and Edge on a computer",
+ mBin:"The file must have a .bin extension",mNot:"This is not an ESP32 firmware file",mBig:"The file is larger than 6 MB — it won’t fit in the device",mMan:"manifest.json didn’t load — reload the page",
+ mOk:"The file is fine. Click “Install from file”.",mb:"MB",mName:"Air monitor (from file)"},
+es:{title:"Monitor de aire — firmware",h1:"Monitor de aire — firmware",sub:"ESP32-S3 · desde el navegador, sin Arduino",
+ nows:"Este navegador no puede usar puertos USB. Abre esta página en <b>Chrome</b> o <b>Edge</b> en un ordenador.",
+ how:"Cómo funciona",s1:"Conecta el dispositivo al ordenador con un cable USB.",s2:"Pulsa el botón de instalación y elige el puerto de la lista.",s3:"Espera un minuto. El dispositivo se reinicia solo.",
+ keep:"La configuración wifi y el historial se conservan si no marcas «Erase device» (borrar todo).",
+ freeh:"Versión gratuita",freet:"Pantalla «Mediciones»",freed:"Todos los sensores en una pantalla: CO₂, polvo PM2.5, VOC, NOx, temperatura y humedad. Página de ajustes y actualizaciones por wifi.",
+ ver:"Versión",freeb:"Instalar la versión gratuita",https:"La página debe abrirse por https.",
+ proh:"Versión PRO",prot:"Todas las pantallas",prod:"Reloj de cartas, índice del aire, gráficos de 12 horas, tiempo, cotizaciones de divisas y bolsa, avisos por Telegram. El archivo del firmware está disponible para los suscriptores de Boosty.",
+ dname:"Elige o arrastra un archivo .bin",dsub:"archivo del firmware PRO de Boosty",prob:"Instalar desde archivo",
+ ota:"También puedes instalar este archivo sin ordenador: en la página de ajustes del dispositivo (<code>http://air.local</code>), sección «Firmware».",
+ help:"¿No funciona?",q1:"El puerto no aparece en la lista",a1:"Puede que el cable sea solo de carga: prueba con otro. Si el puerto sigue sin aparecer, instala el controlador <b>CP210x</b> o <b>CH340</b> (según la placa) y vuelve a conectar el dispositivo.",
+ q2:"Error de conexión o «Failed to initialize»",a2:"Mantén pulsado <b>BOOT</b> en la placa, pulsa y suelta <b>RESET</b> (o reconecta el cable), suelta BOOT e inténtalo de nuevo. Cierra Arduino IDE y otros programas que usen el puerto.",
+ q3:"La pantalla queda en blanco tras instalar",a3:"Pulsa RESET o reconecta la alimentación. Un dispositivo nuevo abre su propio punto de acceso <b>ESP32-TFT-AIR</b> con un código QR en la pantalla: escanéalo para configurar el wifi.",
+ foot:"Se instala con "+EWT+" · funciona en Chrome y Edge en un ordenador",
+ mBin:"El archivo debe tener la extensión .bin",mNot:"No es un archivo de firmware ESP32",mBig:"El archivo pesa más de 6 MB: no cabe en el dispositivo",mMan:"No se cargó manifest.json: recarga la página",
+ mOk:"El archivo es válido. Pulsa «Instalar desde archivo».",mb:"MB",mName:"Monitor de aire (desde archivo)"},
+ru:{mBin:"Нужен файл с расширением .bin",mNot:"Это не файл прошивки ESP32",mBig:"Файл больше 6 МБ — не помещается в прибор",mMan:"Не загрузился manifest.json — обновите страницу",
+ mOk:"Файл подходит. Нажмите «Установить из файла».",mb:"МБ",mName:"Монитор воздуха (из файла)"}};
+const RU={};document.querySelectorAll("[data-i]").forEach(e=>RU[e.dataset.i]=e.innerHTML);RU.title=document.title;
+const LCODE={ru:"RU",en:"EN",es:"ES"};
+function pickLang(){
+  const q=(location.search.match(/[?&](?:lang=)?(ru|en|es)\b/)||[])[1];if(q)return q;
+  try{const s=localStorage.getItem("lang");if(TR[s])return s}catch(e){}
+  for(const l of navigator.languages||[navigator.language||""]){const c=(l||"").slice(0,2).toLowerCase();
+    if(c=="ru"||c=="uk"||c=="be"||c=="kk")return "ru";if(c=="es")return "es";if(c=="en")return "en"}
+  return "en";
+}
+let LANG=pickLang();
+const t=k=>(TR[LANG]&&TR[LANG][k])||TR.ru[k]||RU[k]||k;
+let fileState=null;   // что показать в поле файла и сообщении после смены языка
+function apply(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i]").forEach(e=>{const k=e.dataset.i;e.innerHTML=LANG=="ru"?RU[k]:(TR[LANG][k]||RU[k])});
+  document.title=LANG=="ru"?RU.title:TR[LANG].title;
+  $("langsel").value=LANG;$("langcur").textContent=LCODE[LANG];
+  if(fileState){$("dname").textContent=fileState.name;$("dsub").textContent=fileState.size()}
+  if(lastMsg)setMsg(lastMsg[0],lastMsg[1]);
+}
+$("langsel").onchange=e=>{LANG=e.target.value;try{localStorage.setItem("lang",LANG)}catch(_){}apply()};
+
 // версия бесплатной прошивки — из манифеста
 let MAN=null;
 fetch("manifest.json",{cache:"no-store"}).then(r=>r.json()).then(m=>{MAN=m;$("fv").textContent=m.version;if(m.date)$("fdate").textContent=m.date}).catch(()=>{$("fv").textContent="—"});
 
 // PRO: свой файл. Загрузчик, разметка и boot_app0 — с этого сайта (те же, что у бесплатной), прошивка — из файла
-let blobUrl=null,manUrl=null;
-function setMsg(t,c){$("pmsg").textContent=t;$("pmsg").className="msg "+(c||"")}
+let blobUrl=null,manUrl=null,lastMsg=null;
+function setMsg(k,c){lastMsg=k?[k,c]:null;$("pmsg").textContent=k?t(k):"";$("pmsg").className="msg "+(c||"")}
 async function take(f){
   $("probtn").disabled=true;$("drop").classList.remove("ok");
   if(!f)return;
-  if(!/\.bin$/i.test(f.name)){setMsg("Нужен файл с расширением .bin","er");return}
+  if(!/\.bin$/i.test(f.name)){setMsg("mBin","er");return}
   const head=new Uint8Array(await f.slice(0,1).arrayBuffer());
-  if(head[0]!==0xE9){setMsg("Это не файл прошивки ESP32","er");return}
-  if(f.size>6*1024*1024){setMsg("Файл больше 6 МБ — не помещается в прибор","er");return}
-  if(!MAN){setMsg("Не загрузился manifest.json — обновите страницу","er");return}
+  if(head[0]!==0xE9){setMsg("mNot","er");return}
+  if(f.size>6*1024*1024){setMsg("mBig","er");return}
+  if(!MAN){setMsg("mMan","er");return}
   if(blobUrl)URL.revokeObjectURL(blobUrl);if(manUrl)URL.revokeObjectURL(manUrl);
   blobUrl=URL.createObjectURL(f);
   const base=new URL("manifest.json",location.href);
   const parts=MAN.builds[0].parts.slice(0,-1).map(p=>({path:new URL(p.path,base).href,offset:p.offset}));
   parts.push({path:blobUrl,offset:MAN.builds[0].parts.at(-1).offset});
-  const m={name:"Монитор воздуха (из файла)",version:f.name.replace(/\.bin$/i,""),new_install_prompt_erase:true,builds:[{chipFamily:"ESP32-S3",parts}]};
+  const m={name:t("mName"),version:f.name.replace(/\.bin$/i,""),new_install_prompt_erase:true,builds:[{chipFamily:"ESP32-S3",parts}]};
   manUrl=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/json"}));
   $("pro").manifest=manUrl;
-  $("dname").textContent=f.name;$("dsub").textContent=(f.size/1048576).toFixed(2).replace(".",",")+" МБ";
+  fileState={name:f.name,size:()=>{const s=(f.size/1048576).toFixed(2);return (LANG=="en"?s:s.replace(".",","))+" "+t("mb")}};
+  $("dname").textContent=fileState.name;$("dsub").textContent=fileState.size();
   $("drop").classList.add("ok");$("probtn").disabled=false;
-  setMsg("Файл подходит. Нажмите «Установить из файла».","ok");
+  setMsg("mOk","ok");
 }
 $("file").onchange=e=>take(e.target.files[0]);
 const d=$("drop");
 ["dragenter","dragover"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.add("over")}));
 ["dragleave","drop"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.remove("over")}));
 d.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)take(f)});
+apply();
 </script>
 </body>
 </html>
