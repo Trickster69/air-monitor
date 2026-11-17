@@ -50,6 +50,7 @@ h1{font:400 clamp(38px,5vw,58px)/1.08 var(--serif);letter-spacing:-.02em;color:v
 
 /* прибор — единственный свет на странице идёт от его экрана */
 .stage{position:relative;perspective:1400px}
+html,body{overflow-x:clip}   /* подсветка за прибором не даёт горизонтальной прокрутки на средней ширине */
 .amb{position:absolute;inset:-12% -8%;z-index:0;pointer-events:none;filter:blur(60px) saturate(1.8) brightness(1.2);opacity:.8}
 .amb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease}
 .amb img.on{opacity:1}
@@ -163,7 +164,7 @@ footer a{color:var(--dim)}
 
 <div class="hero">
   <div class="intro">
-    <h1 data-i="h1">Монитор воздуха, который я собрал сам</h1>
+    <h1 data-i="h1">Подскажет, когда открыть окно</h1>
     <p class="lead" data-i="lead">CO₂, пыль, VOC, температура и влажность на цветном экране 2,8″. Код открыт, а прошивка ставится прямо с этой страницы — по USB, за минуту.</p>
     <div class="need hero-need"><p data-i="need">Прошивка ставится с компьютера — в Chrome или Edge, через USB-кабель. Откройте эту страницу там.</p><button type="button" class="btn cplink" data-i="copy">Скопировать ссылку</button></div>
     <div class="cta"><a class="btn p" href="#install" data-i="cta">Установить прошивку</a><a class="link" href="#versions" data-i="cta2">Бесплатная и PRO — в чём разница</a></div>
@@ -267,7 +268,7 @@ const NO='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="cu
 // ---- языки: русский текст лежит в разметке, английский и испанский — здесь; ключ — data-i
 const EWT='<a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a>';
 const TR={
-en:{title:"Air monitor — firmware",brand:"Air monitor",h1:"An air monitor I built myself",
+en:{title:"Air monitor — firmware",brand:"Air monitor",h1:"Tells you when to open a window",
  lead:"CO₂, dust, VOC, temperature and humidity on a 2.8″ colour screen. The code is open, and the firmware installs right from this page — over USB, in a minute.",
  cta:"Install firmware",cta2:"Free vs PRO — what’s the difference",how:"How to install",
  nows:"This browser can’t talk to USB ports. Open this page in <b>Chrome</b> or <b>Edge</b> on a computer.",
@@ -286,7 +287,7 @@ en:{title:"Air monitor — firmware",brand:"Air monitor",h1:"An air monitor I bu
  tg:"Telegram alerts",tgs:"when the air gets worse than your threshold",web:"Settings page, Wi-Fi by QR code, updates over Wi-Fi",
  mBin:"The file must have a .bin extension",mNot:"This is not an ESP32 firmware file",mBig:"The file is larger than 6 MB — it won’t fit in the device",mMan:"manifest.json didn’t load — reload the page",
  mOk:"The file is fine. Click “Install from file”.",mb:"MB",mName:"Air monitor (from file)"},
-es:{title:"Monitor de aire — firmware",brand:"Monitor de aire",h1:"Un monitor de aire que construí yo mismo",
+es:{title:"Monitor de aire — firmware",brand:"Monitor de aire",h1:"Te avisa cuándo abrir la ventana",
  lead:"CO₂, polvo, VOC, temperatura y humedad en una pantalla a color de 2,8″. El código es abierto y el firmware se instala desde esta misma página: por USB, en un minuto.",
  cta:"Instalar firmware",cta2:"Gratuita y PRO: en qué se diferencian",how:"Cómo instalar",
  nows:"Este navegador no puede usar puertos USB. Abre esta página en <b>Chrome</b> o <b>Edge</b> en un ordenador.",
