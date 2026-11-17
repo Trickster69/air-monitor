@@ -70,7 +70,7 @@ inline void hState() {
     p += last ? "]" : "],";
   };
   mv("co2", app::M_CO2, 0); mv("pm", app::M_PM25, 0); mv("t", app::M_T, 1); mv("h", app::M_H, 0); mv("voc", app::M_VOC, 0); mv("nox", app::M_NOX, 0, true);
-  p += "},\"cfg\":{\"ssid\":"; jstr(p, cfg.ssid); p += ",\"hasPass\":"; p += cfg.password[0] ? "true" : "false";
+  p += "},\"cfg\":{\"lang\":\""; p += langCode(cfg.lang); p += "\",\"ssid\":"; jstr(p, cfg.ssid); p += ",\"hasPass\":"; p += cfg.password[0] ? "true" : "false";
   p += ",\"city\":"; jstr(p, cfg.city); p += ",\"cityShown\":"; jstr(p, !strcmp(cfg.geoCity, cfg.city) ? cfg.cityShown : "");
   p += ",\"tg\":"; p += cfg.telegramEnabled ? "true" : "false"; p += ",\"hasTok\":"; p += cfg.telegramToken[0] ? "true" : "false"; p += ",\"chat\":"; jstr(p, cfg.telegramChatId);
   p += ",\"thCO2\":"; p += cfg.thCO2; p += ",\"thPM\":"; p += cfg.thPM25; p += ",\"thVOC\":"; p += cfg.thVOC;
@@ -149,26 +149,26 @@ inline void hCity() {
 // тест Telegram по тому, что сейчас вписано в форму (ещё не сохранено); пустой токен — берётся сохранённый
 inline void hTgTest() {
 #if !AIR_PRO
-  reply(false, "err", "Уведомления в Telegram есть в PRO-версии"); return;
+  reply(false, "err", L("Уведомления в Telegram есть в PRO-версии", "Telegram notifications are in the PRO version")); return;
 #else
-  if (WiFi.status() != WL_CONNECTED) { reply(false, "err", "Прибор не в интернете — сначала подключите Wi-Fi"); return; }
+  if (WiFi.status() != WL_CONNECTED) { reply(false, "err", L("Прибор не в интернете — сначала подключите Wi-Fi", "The device is offline — connect Wi-Fi first")); return; }
   String tok = server.arg("telegram_token"), chat = server.arg("telegram_chat_id"); tok.trim(); chat.trim();
   if (!tok.length()) tok = cfg.telegramToken;
-  if (!tok.length()) { reply(false, "err", "Впишите токен бота"); return; }
+  if (!tok.length()) { reply(false, "err", L("Впишите токен бота", "Enter the bot token")); return; }
   char keepTok[sizeof cfg.telegramToken]; strlcpy(keepTok, cfg.telegramToken, sizeof keepTok);
   strlcpy(cfg.telegramToken, tok.c_str(), sizeof cfg.telegramToken);
   tg::drop(); tg::client.setInsecure(); tg::client.setHandshakeTimeout(8);
   bool ok; const char* key = nullptr; const char* text = nullptr;
   if (chat.length()) {
-    tg::T.clear(); tg::T.add("Монитор воздуха на связи. Уведомления будут приходить сюда.");
+    tg::T.clear(); tg::T.add(L("Монитор воздуха на связи. Уведомления будут приходить сюда.", "Air monitor is online. Notifications will arrive here."));
     ok = tg::send(chat.c_str());
-    if (!ok) { key = "err"; text = "Telegram не принял сообщение — проверьте токен и Chat ID"; }
+    if (!ok) { key = "err"; text = L("Telegram не принял сообщение — проверьте токен и Chat ID", "Telegram rejected the message — check the token and Chat ID"); }
   } else {                                                     // чата ещё нет — проверяем хотя бы токен
     net::feed();
     tg::http.setConnectTimeout(5000); tg::http.setTimeout(5000);
     ok = tg::http.begin(tg::client, tg::api("getMe")) && tg::http.GET() == 200;
     tg::http.end(); net::feed();
-    key = ok ? "msg" : "err"; text = ok ? "Токен верный. Сохраните и отправьте боту /bind" : "Telegram не принял токен — проверьте его";
+    key = ok ? "msg" : "err"; text = ok ? L("Токен верный. Сохраните и отправьте боту /bind", "Token is valid. Save and send /bind to the bot") : L("Telegram не принял токен — проверьте его", "Telegram rejected the token — check it");
   }
   tg::http.end(); tg::client.stop(); tg::inited = false;
   strlcpy(cfg.telegramToken, keepTok, sizeof cfg.telegramToken);
@@ -180,7 +180,7 @@ inline void hTgTest() {
 inline void hSave() {
   auto arg = [&](const char* name) { String v = server.arg(name); v.trim(); return v; };
   const String ssid = arg("ssid"), pass = server.arg("password"), city = arg("city"), tok = arg("telegram_token");
-  if (!ssid.length()) { reply(false, "err", "Укажите сеть Wi-Fi"); return; }
+  if (!ssid.length()) { reply(false, "err", L("Укажите сеть Wi-Fi", "Choose a Wi-Fi network")); return; }
   bool wifiChanged = false;
   if (ssid != cfg.ssid) { wifiChanged = true; strlcpy(cfg.ssid, ssid.c_str(), sizeof cfg.ssid); strlcpy(cfg.password, pass.c_str(), sizeof cfg.password); }   // новая сеть: пустой пароль = открытая
   else if (pass.length() && pass != cfg.password) { wifiChanged = true; strlcpy(cfg.password, pass.c_str(), sizeof cfg.password); }                    // та же сеть: пустое поле — пароль не трогаем
@@ -208,9 +208,19 @@ inline void hSave() {
     if (ch) { mkApply(); net::mkNext = app::ASSET_N; net::mkEver = false; Serial.println("[настройки] набор активов изменён"); }
     net::mkTry = 0;                                            // котировки — сразу
   }
+  bool langChanged = false;
+  if (server.hasArg("lang")) {                                 // язык: экраны собраны с надписями — меняем с перезагрузкой
+    const String la = arg("lang"); const uint8_t nl = la == "en" ? LANG_EN : la == "es" ? LANG_ES : LANG_RU;
+    if (nl != cfg.lang) {
+      langChanged = true; cfg.lang = nl; gLang = nl;
+      for (int i = 0; i < app::ASSET_N; i++) for (const auto& d : app::ASSET_DEF)   // имена активов по умолчанию — на новом языке, свои не трогаем
+        if (!strcmp(cfg.mk[i].sym, d.sym) && (!strcmp(cfg.mk[i].name, d.name) || !strcmp(cfg.mk[i].name, d.nameEn) || !strcmp(cfg.mk[i].name, esOf(d.nameEn)))) strlcpy(cfg.mk[i].name, L(d.name, d.nameEn), sizeof cfg.mk[i].name);
+      cfg.geoCity[0] = 0; cfgSaveGeo();                        // название города перезапросится на новом языке
+    }
+  }
   cfgDefaults(); cfgSave();
-  const bool restart = wifiChanged || gPortalActive;           // из точки доступа выходим перезагрузкой; дома перезагрузка нужна только при смене сети
-  Serial.printf("[настройки] сохранено%s%s%s\n", wifiChanged ? ", сеть изменена" : "", cityChanged ? ", город изменён" : "", restart ? ", перезагрузка" : "");
+  const bool restart = wifiChanged || gPortalActive || langChanged;           // из точки доступа выходим перезагрузкой; дома перезагрузка нужна только при смене сети
+  Serial.printf("[настройки] сохранено%s%s%s%s\n", wifiChanged ? ", сеть изменена" : "", cityChanged ? ", город изменён" : "", langChanged ? ", язык изменён" : "", restart ? ", перезагрузка" : "");
   json(200, restart ? "{\"ok\":1,\"restart\":true}" : "{\"ok\":1,\"restart\":false}");
   if (restart) restartSoon();
   tgStop();                              // Telegram подхватит новые настройки на следующем проходе

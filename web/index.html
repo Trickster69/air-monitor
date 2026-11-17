@@ -12,6 +12,10 @@ html{background:var(--bg)}
 body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--cr);background:radial-gradient(900px 500px at 50% -120px,#2a1c13,transparent) var(--bg);min-height:100vh}
 main{max-width:520px;margin:0 auto;padding:18px 14px 120px}
 header{display:flex;align-items:center;gap:12px;margin:4px 4px 16px}
+.lang{margin-left:auto;position:relative;display:flex;align-items:center;gap:6px;height:38px;padding:0 10px 0 9px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--cr);font:700 13px system-ui,sans-serif;letter-spacing:.6px;flex:none;cursor:pointer}
+.lang svg{flex:none}.lang .gl{color:var(--am)}.lang .ch{color:var(--dim)}
+.lang select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.lang:focus-within{border-color:var(--am);box-shadow:0 0 0 3px #ffb54a26}
 .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#ffb54a,#e58a2a);display:grid;place-items:center;flex:none}
 h1{font-size:19px;margin:0;letter-spacing:.2px}
 .sub{font-size:13px;color:var(--dim)}
@@ -113,6 +117,7 @@ footer .btn:not(.p){height:54px}
 <header>
   <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a120c" stroke-width="2.4" stroke-linecap="round"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h7"/></svg></div>
   <div><h1>Монитор воздуха</h1><div class="sub" id="where">настройки</div></div>
+  <label class="lang" title="Язык · Language · Idioma"><svg class="gl" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.6 3.9 5.6 3.9 9.2s-1.3 6.6-3.9 9.2c-2.6-2.6-3.9-5.6-3.9-9.2s1.3-6.6 3.9-9.2z"/></svg><span id="langcur">RU</span><svg class="ch" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><select id="langsel" name="lang" form="f" aria-label="Язык · Language · Idioma"><option value="ru">Русский</option><option value="en">English</option><option value="es">Español</option></select></label>
 </header>
 
 <section class="card">
@@ -155,9 +160,9 @@ footer .btn:not(.p){height:54px}
   <div class="lockmsg"><span>🔒 Есть в PRO-версии</span><a class="prolink" target="_blank" rel="noopener">Получить PRO</a></div>
   <label class="sw"><span>Присылать уведомления в Telegram</span><input type="checkbox" id="tg" name="telegram_enabled"></label>
   <details style="margin:4px 0 12px"><summary>▸ Как подключить бота?</summary><ol>
-      <li>В Telegram найдите <code>@BotFather</code>, отправьте <code>/newbot</code>, придумайте имя.</li>
-      <li>Скопируйте токен, который он пришлёт, в поле выше.</li>
-      <li>Сохраните, откройте своего бота и отправьте ему <code>/bind</code> — прибор сам запомнит ваш чат, вписывать ничего не нужно.</li>
+      <li data-es="En Telegram, busca <code>@BotFather</code>, envía <code>/newbot</code> y elige un nombre." data-en="In Telegram, find <code>@BotFather</code>, send <code>/newbot</code> and pick a name.">В Telegram найдите <code>@BotFather</code>, отправьте <code>/newbot</code>, придумайте имя.</li>
+      <li data-es="Copia en el campo de arriba el token que te envíe." data-en="Copy the token it sends you into the field above.">Скопируйте токен, который он пришлёт, в поле выше.</li>
+      <li data-es="Guarda, abre tu bot y envíale <code>/bind</code> — el dispositivo recordará tu chat solo, no hace falta escribir nada más." data-en="Save, open your bot and send it <code>/bind</code> — the device remembers your chat by itself, nothing else to type.">Сохраните, откройте своего бота и отправьте ему <code>/bind</code> — прибор сам запомнит ваш чат, вписывать ничего не нужно.</li>
     </ol></details>
   <div id="tgbox">
     <label class="f" for="tok">Токен бота</label>
@@ -210,34 +215,89 @@ const MC=["#3B82C4","#8E5BD0","#2FA58A","#D0603A","#C24A7A","#5B6FD6","#3F9A4E",
 let MK=[],slot=0,qt;
 DEMO.mk={on:true,list:POP.filter((x,i)=>[0,1,3,5,7].includes(i)).map((x,i)=>({s:x[0],n:x[1],t:x[2],k:x[3],p:[67250,3412.5,2380,78.4,5321][i],c:"USD"}))};
 const DEMO_NETS=[{s:"MyHome",r:-58,l:1},{s:"TP-Link_5F2A",r:-71,l:1},{s:"Keenetic-4412",r:-79,l:1},{s:"Guest",r:-86,l:0}];
-let demo=false,S;
+let demo=false,S,lastNets=null;
+// Перевод страницы: исходный текст — русский, английский берётся из EN по точной строке (без пробелов по краям).
+const EN={"Монитор воздуха":"Air Monitor","настройки":"settings","Сейчас":"Now","Обновить список":"Refresh list",
+"Имя сети — выберите из списка или впишите":"Network name — pick from the list or type it","Пароль":"Password",
+"Погода и время":"Weather and time","🔒 Есть в PRO-версии":"🔒 Available in PRO","Получить PRO":"Get PRO",
+"Город — по-русски или латиницей":"City — in any language","Проверить":"Check",
+"Часовой пояс прибор определит сам по городу.":"The device sets the time zone from the city.","Рынки":"Markets",
+"Показывать экран с курсами":"Show the markets screen",
+"Пять активов на экране. Главный — на большой карточке, стрелка поднимает выше. Название можно переписать.":"Five assets on the screen. The first one gets the big card, the arrow moves an asset up. Names can be edited.",
+"Присылать уведомления в Telegram":"Send notifications to Telegram","▸ Как подключить бота?":"▸ How do I connect a bot?",
+"Токен бота":"Bot token","Когда писать — показатель выше порога":"Notify when a reading goes above the threshold",
+"ppm · душно от 1000":"ppm · stuffy from 1000","Пыль PM2.5":"Dust PM2.5","мкг/м³ · норма до 15":"µg/m³ · normal up to 15",
+"индекс · обычный воздух 100":"index · normal air is 100","Отправить тестовое сообщение":"Send a test message","Прошивка":"Firmware",
+"Выбрать файл прошивки .bin":"Choose a firmware .bin file","Обновить прошивку":"Update firmware",
+"Настройки и история при обновлении сохраняются. Не отключайте питание.":"Settings and history are kept. Don’t unplug the power.",
+"Сервис":"Service","Перезагрузить":"Restart","Сбросить настройки":"Reset settings","Выйти":"Exit","Сохранить":"Save",
+"Выбрать актив":"Choose an asset","Закрыть":"Close","показать пароль":"show password","показать токен":"show token",
+"отличный":"excellent","хороший":"good","слабый":"weak","очень слабый":"very weak","д":"d","ч":"h","мин":"min",
+"мкг":"µg","Темп.":"Temp","Влага":"Humidity","адрес":"address","Wi-Fi не подключён":"Wi-Fi not connected","работает":"uptime","версия":"version",
+"открытая":"open","Сети не найдены":"No networks found","Ищу сети…":"Looking for networks…","✓ Чат привязан":"✓ Chat linked","Отвязать":"Unlink",
+"Чат пока не привязан. Сохраните токен и отправьте своему боту <code>/bind</code> — прибор запомнит чат сам.":"No chat linked yet. Save the token and send <code>/bind</code> to your bot — the device will remember the chat.",
+"Чат отвяжется после «Сохранить»":"The chat will be unlinked after Save","крипта":"crypto","акция":"stock","фонд":"fund","индекс":"index","фьючерс":"futures","валюта":"currency",
+"название на экране":"name on screen","главный":"main","выше":"move up","Заменить":"Replace","— не забудьте «Сохранить»":"— don’t forget to Save",
+"Ищу…":"Searching…","демо":"demo","Нет интернета — поиск заработает, когда прибор подключится к Wi-Fi. Пока можно выбрать из популярных.":"No internet — search works once the device is on Wi-Fi. For now, pick a popular one.",
+"Ничего не нашлось — попробуйте название по-английски или тикер":"Nothing found — try the English name or the ticker",
+"настройки · точка доступа":"settings · hotspot","настройки · air.local":"settings · air.local","бесплатная версия":"free version",
+"сохранён · пусто — не менять":"saved · leave empty to keep","Прибор не смог подключиться — проверьте пароль.":"The device couldn’t connect — check the password.",
+"часовой пояс определяется сам":"time zone is set automatically","Найден:":"Found:","Такой город не нашёлся — проверьте название":"City not found — check the name",
+"Нет интернета — проверю после подключения к Wi-Fi":"No internet — I’ll check once Wi-Fi is connected","Отправляю…":"Sending…","Отправлено — проверьте Telegram":"Sent — check Telegram",
+"Не получилось":"Didn’t work","Нет связи с прибором":"No connection to the device","МБ":"MB","Обновить прошивку файлом":"Update the firmware with",
+"Прошивка обновлена":"Firmware updated","Прибор перезагружается…":"The device is restarting…","Не получилось:":"Didn’t work:","Связь оборвалась — попробуйте ещё раз":"Connection lost — try again",
+"Перезагрузить прибор?":"Restart the device?","Перезагружаюсь":"Restarting","Через 10 секунд прибор снова в работе.":"The device will be back in 10 seconds.",
+"Стереть Wi-Fi, город и Telegram? История показаний останется.":"Erase Wi-Fi, city and Telegram? Reading history stays.","Настройки сброшены":"Settings reset",
+"Прибор перезагружается.":"The device is restarting.","Вышли без изменений":"Exited without changes","Прибор возвращается к работе.":"The device is back to work.",
+"Укажите сеть Wi-Fi":"Choose a Wi-Fi network","Для Telegram нужен токен бота":"Telegram needs a bot token","Сохраняю…":"Saving…","Сохранено":"Saved",
+"Прибор перезагружается и подключается к":"The device is restarting and connecting to","Чат привязан":"Chat linked",
+"Язык прибора сменится после «Сохранить»":"The device switches language after Save",
+"БИТКОИН":"BITCOIN","ЭФИР":"ETHER","ЗОЛОТО":"GOLD","СЕРЕБРО":"SILVER","НЕФТЬ":"OIL"};
+const ES={"Монитор воздуха":"Monitor de aire","настройки":"ajustes","Сейчас":"Ahora","Обновить список":"Actualizar lista","Имя сети — выберите из списка или впишите":"Nombre de la red — elígela de la lista o escríbela","Пароль":"Contraseña","Погода и время":"Tiempo y hora","🔒 Есть в PRO-версии":"🔒 Disponible en PRO","Получить PRO":"Obtener PRO","Город — по-русски или латиницей":"Ciudad — en cualquier idioma","Проверить":"Comprobar","Часовой пояс прибор определит сам по городу.":"El dispositivo fija la zona horaria según la ciudad.","Рынки":"Mercados","Показывать экран с курсами":"Mostrar la pantalla de mercados","Пять активов на экране. Главный — на большой карточке, стрелка поднимает выше. Название можно переписать.":"Cinco activos en pantalla. El primero va en la tarjeta grande; la flecha lo sube. Puedes cambiar los nombres.","Присылать уведомления в Telegram":"Enviar avisos a Telegram","▸ Как подключить бота?":"▸ ¿Cómo conecto un bot?","Токен бота":"Token del bot","Когда писать — показатель выше порога":"Avisar cuando un valor supere el umbral","ppm · душно от 1000":"ppm · cargado desde 1000","Пыль PM2.5":"Polvo PM2.5","мкг/м³ · норма до 15":"µg/m³ · normal hasta 15","индекс · обычный воздух 100":"índice · aire normal 100","Отправить тестовое сообщение":"Enviar mensaje de prueba","Прошивка":"Firmware","Выбрать файл прошивки .bin":"Elegir archivo de firmware .bin","Обновить прошивку":"Actualizar firmware","Настройки и история при обновлении сохраняются. Не отключайте питание.":"Los ajustes y el historial se conservan. No desconectes la corriente.","Сервис":"Servicio","Перезагрузить":"Reiniciar","Сбросить настройки":"Restablecer ajustes","Выйти":"Salir","Сохранить":"Guardar","Выбрать актив":"Elegir activo","Закрыть":"Cerrar","показать пароль":"mostrar contraseña","показать токен":"mostrar token","отличный":"excelente","хороший":"buena","слабый":"débil","очень слабый":"muy débil","д":"d","ч":"h","мин":"min","мкг":"µg","Темп.":"Temp","Влага":"Humedad","адрес":"dirección","Wi-Fi не подключён":"Wi-Fi sin conectar","работает":"en marcha","версия":"versión","открытая":"abierta","Сети не найдены":"No se encontraron redes","Ищу сети…":"Buscando redes…","✓ Чат привязан":"✓ Chat vinculado","Отвязать":"Desvincular","Чат пока не привязан. Сохраните токен и отправьте своему боту <code>/bind</code> — прибор запомнит чат сам.":"Aún no hay chat vinculado. Guarda el token y envía <code>/bind</code> a tu bot — el dispositivo recordará el chat.","Чат отвяжется после «Сохранить»":"El chat se desvinculará al Guardar","крипта":"cripto","акция":"acción","фонд":"fondo","индекс":"índice","фьючерс":"futuro","валюта":"divisa","название на экране":"nombre en pantalla","главный":"principal","выше":"subir","Заменить":"Cambiar","— не забудьте «Сохранить»":"— no olvides Guardar","Ищу…":"Buscando…","демо":"demo","Нет интернета — поиск заработает, когда прибор подключится к Wi-Fi. Пока можно выбрать из популярных.":"Sin internet — la búsqueda funcionará cuando el dispositivo tenga Wi-Fi. Mientras, elige uno popular.","Ничего не нашлось — попробуйте название по-английски или тикер":"Sin resultados — prueba el nombre en inglés o el ticker","настройки · точка доступа":"ajustes · punto de acceso","настройки · air.local":"ajustes · air.local","бесплатная версия":"versión gratuita","сохранён · пусто — не менять":"guardada · vacío para no cambiar","Прибор не смог подключиться — проверьте пароль.":"El dispositivo no pudo conectarse — revisa la contraseña.","часовой пояс определяется сам":"la zona horaria se fija sola","Найден:":"Encontrada:","Такой город не нашёлся — проверьте название":"No se encontró la ciudad — revisa el nombre","Нет интернета — проверю после подключения к Wi-Fi":"Sin internet — lo comprobaré al conectar el Wi-Fi","Отправляю…":"Enviando…","Отправлено — проверьте Telegram":"Enviado — revisa Telegram","Не получилось":"No funcionó","Нет связи с прибором":"Sin conexión con el dispositivo","МБ":"MB","Обновить прошивку файлом":"¿Actualizar el firmware con","Прошивка обновлена":"Firmware actualizado","Прибор перезагружается…":"El dispositivo se está reiniciando…","Не получилось:":"No funcionó:","Связь оборвалась — попробуйте ещё раз":"Se perdió la conexión — inténtalo de nuevo","Перезагрузить прибор?":"¿Reiniciar el dispositivo?","Перезагружаюсь":"Reiniciando","Через 10 секунд прибор снова в работе.":"El dispositivo volverá en 10 segundos.","Стереть Wi-Fi, город и Telegram? История показаний останется.":"¿Borrar Wi-Fi, ciudad y Telegram? El historial se conserva.","Настройки сброшены":"Ajustes restablecidos","Прибор перезагружается.":"El dispositivo se está reiniciando.","Вышли без изменений":"Salida sin cambios","Прибор возвращается к работе.":"El dispositivo vuelve a funcionar.","Укажите сеть Wi-Fi":"Elige una red Wi-Fi","Для Telegram нужен токен бота":"Telegram necesita el token del bot","Сохраняю…":"Guardando…","Сохранено":"Guardado","Прибор перезагружается и подключается к":"El dispositivo se reinicia y se conecta a","Чат привязан":"Chat vinculado","Язык прибора сменится после «Сохранить»":"El idioma del dispositivo cambia al Guardar","БИТКОИН":"BITCOIN","ЭФИР":"ETHER","ЗОЛОТО":"ORO","СЕРЕБРО":"PLATA","НЕФТЬ":"PETRÓLEO"};
+let LANG="ru";
+const DICT=()=>LANG=="en"?EN:LANG=="es"?ES:null;
+const t=x=>{const D=DICT();return D&&D[x]!=null?D[x]:x};          // строка на текущем языке
+const qq=x=>LANG=="en"?"“"+x+"”":"«"+x+"»";                       // кавычки (в испанском — тоже «»)
+const num=(v,d)=>LANG=="en"?v.toFixed(d):v.toFixed(d).replace(".",",");
+// неподвижный текст страницы: запоминаем русский оригинал один раз, дальше переводим туда и обратно
+const ST=[],SA=[],SH=[...document.querySelectorAll("[data-en]")].map(e=>[e,e.innerHTML]);
+const LCODE={ru:"RU",en:"EN",es:"ES"};
+(function walk(n){for(const c of n.childNodes){if(c.nodeType==3){if(c.nodeValue.trim())ST.push([c,c.nodeValue])}else if(c.nodeType==1&&c.tagName!="SCRIPT"&&c.tagName!="STYLE")walk(c)}})(document.body);
+document.querySelectorAll("[placeholder],[aria-label]").forEach(e=>["placeholder","aria-label"].forEach(a=>{const v=e.getAttribute(a);if(v)SA.push([e,a,v])}));
+function tStatic(){
+  const D=DICT();for(const [n,o] of ST){const k=o.trim();n.nodeValue=D&&D[k]!=null?o.replace(k,D[k]):o}
+  for(const [e,a,o] of SA)e.setAttribute(a,t(o));
+  for(const [e,o] of SH)e.innerHTML=LANG=="ru"?o:e.dataset[LANG];
+  document.documentElement.lang=LANG;document.title=t("Монитор воздуха");
+  $("langsel").value=LANG;$("langcur").textContent=LCODE[LANG];
+}
 const $=id=>document.getElementById(id);
 const eyeOn='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("v");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("v"),2600)}
 async function api(u,o){if(demo)throw 0;const r=await fetch(u,Object.assign({cache:"no-store"},o));if(!r.ok)throw r.status;return r.json()}
 function bars(r){const n=r>-60?4:r>-70?3:r>-80?2:1;let h='<div class="bars">';for(let i=1;i<=4;i++)h+='<u style="height:'+(2+i*3)+'px"'+(i<=n?' class="y"':'')+'></u>';return h+'</div>'}
-function sig(r){return r>-60?"отличный":r>-70?"хороший":r>-80?"слабый":"очень слабый"}
-function upt(m){const d=Math.floor(m/1440),h=Math.floor(m%1440/60);return d?d+" д "+h+" ч":h?h+" ч "+m%60+" мин":m+" мин"}
+function sig(r){return t(r>-60?"отличный":r>-70?"хороший":r>-80?"слабый":"очень слабый")}
+function upt(m){const d=Math.floor(m/1440),h=Math.floor(m%1440/60),D=t("д"),H=t("ч"),M=t("мин");return d?d+" "+D+" "+h+" "+H:h?h+" "+H+" "+m%60+" "+M:m+" "+M}
 function live(){
-  const L=S.live,T=[["CO₂",L.co2,"ppm",0],["PM2.5",L.pm,"мкг",0],["Темп.",L.t,"°C",1],["Влага",L.h,"%",0],["VOC",L.voc,"",0],["NOx",L.nox,"",0]];
+  const L=S.live,T=[["CO₂",L.co2,"ppm",0],["PM2.5",L.pm,t("мкг"),0],[t("Темп."),L.t,"°C",1],[t("Влага"),L.h,"%",0],["VOC",L.voc,"",0],["NOx",L.nox,"",0]];
   $("live").innerHTML=T.map(([n,v,u,d])=>{const ok=v&&v[0]!=null,c=!ok?"x":v[1]==2?"b":v[1]==1?"w":"";
-    return '<div class="tile '+c+'"><span><i></i>'+n+'</span><b>'+(ok?v[0].toFixed(d).replace(".",","):"—")+(ok&&u?'<small>'+u+'</small>':'')+'</b></div>'}).join("");
+    return '<div class="tile '+c+'"><span><i></i>'+n+'</span><b>'+(ok?num(v[0],d):"—")+(ok&&u?'<small>'+u+'</small>':'')+'</b></div>'}).join("");
   const w=S.wifi;
-  $("meta").innerHTML=(w.ok?'<span>Wi-Fi <b>'+w.ssid+'</b> · '+sig(w.rssi)+'</span><span>адрес <b>'+w.ip+'</b></span>':'<span class="er">Wi-Fi не подключён</span>')+'<span>работает <b>'+upt(S.up)+'</b></span>';
-  $("fw").textContent="версия "+S.fw;
+  $("meta").innerHTML=(w.ok?'<span>Wi-Fi <b>'+w.ssid+'</b> · '+sig(w.rssi)+'</span><span>'+t("адрес")+' <b>'+w.ip+'</b></span>':'<span class="er">'+t("Wi-Fi не подключён")+'</span>')+'<span>'+t("работает")+' <b>'+upt(S.up)+'</b></span>';
+  $("fw").textContent=t("версия")+" "+S.fw;
 }
-function nets(a){
+function nets(a){lastNets=a;
   const cur=$("ssid").value;
-  $("nets").innerHTML=a.length?a.map(n=>'<li class="'+(n.s==cur?"on":"")+'" data-s="'+n.s.replace(/"/g,"&quot;")+'">'+bars(n.r)+'<span>'+n.s.replace(/</g,"&lt;")+'</span><em>'+(n.l?"":"открытая")+'</em></li>').join(""):'<li><span class="sub">Сети не найдены</span></li>';
+  $("nets").innerHTML=a.length?a.map(n=>'<li class="'+(n.s==cur?"on":"")+'" data-s="'+n.s.replace(/"/g,"&quot;")+'">'+bars(n.r)+'<span>'+n.s.replace(/</g,"&lt;")+'</span><em>'+(n.l?"":t("открытая"))+'</em></li>').join(""):'<li><span class="sub">'+t("Сети не найдены")+'</span></li>';
 }
 async function scan(){
-  $("nets").innerHTML='<li><span class="sub">Ищу сети…</span></li>';
+  $("nets").innerHTML='<li><span class="sub">'+t("Ищу сети…")+'</span></li>';
   try{nets(await api("/api/scan"))}catch(e){demo?setTimeout(()=>nets(DEMO_NETS),500):nets([])}
 }
 function bind(){const c=$("chat").value;
-  $("bind").innerHTML=c?'<div><span class="ok">✓ Чат привязан</span><small>ID '+c.replace(/</g,"&lt;")+'</small></div><button type="button" class="btn s" id="unb">Отвязать</button>'
-    :'<div>Чат пока не привязан. Сохраните токен и отправьте своему боту <code>/bind</code> — прибор запомнит чат сам.</div>';
-  if(c)$("unb").onclick=()=>{$("chat").value="";bind();toast("Чат отвяжется после «Сохранить»")}}
+  $("bind").innerHTML=c?'<div><span class="ok">'+t("✓ Чат привязан")+'</span><small>ID '+c.replace(/</g,"&lt;")+'</small></div><button type="button" class="btn s" id="unb">'+t("Отвязать")+'</button>'
+    :'<div>'+t("Чат пока не привязан. Сохраните токен и отправьте своему боту <code>/bind</code> — прибор запомнит чат сам.")+'</div>';
+  if(c)$("unb").onclick=()=>{$("chat").value="";bind();toast(t("Чат отвяжется после «Сохранить»"))}}
 function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
 function fnv(t){let h=2166136261;for(const c of new TextEncoder().encode(t))h=Math.imul(h^c,16777619)>>>0;return h}
 function disc(m){const sp=SPEC[m.s];let c,g;                       // как на экране прибора: свой значок у известных, у остальных буква
@@ -246,47 +306,54 @@ function disc(m){const sp=SPEC[m.s];let c,g;                       // как н�
 function clean(t){return t.toUpperCase().replace(/[^A-ZА-ЯЁ0-9 &.\/\-]/g,"").replace(/\s+/g," ").slice(0,12)}
 function label(n,tick){const t=clean(n.toUpperCase().replace(/[,.]? (INC|CORPORATION|CORP|LTD|LIMITED|PLC|HOLDINGS|GROUP|COMPANY|CO|N\.V|S\.A|AG|SE|USD|CLASS [A-Z])\b.*$/,"")).trim();return t||tick}
 function tickOf(s){return s.replace(/^\^/,"").replace(/(-USD|=F|=X)$/,"").slice(0,9)}
-function price(v){return v>=1000?Math.round(v).toLocaleString("ru-RU"):v.toFixed(v>=10?2:v>=1?3:4).replace(".",",")}
+function price(v){return v>=1000?Math.round(v).toLocaleString(LANG=="en"?"en-US":LANG=="es"?"de-DE":"ru-RU"):num(v,v>=10?2:v>=1?3:4)}
 function mkbox(){$("mkbox").classList.toggle("off",!$("mk_on").checked)}
 function mkrender(){
-  $("mklist").innerHTML=MK.map((m,i)=>'<div class="mk">'+disc(m)+'<div class="nm"><input type="text" name="mk_n'+i+'" data-i="'+i+'" maxlength="12" value="'+esc(m.n)+'" aria-label="название на экране">'
-    +'<small>'+(i?"":"<b>главный</b> · ")+esc(m.s)+" · "+(KN[m.k]||"")+(m.p?" · "+price(m.p)+(m.c&&m.c!="USD"?" "+esc(m.c):" $"):"")+'</small></div>'
+  $("mklist").innerHTML=MK.map((m,i)=>'<div class="mk">'+disc(m)+'<div class="nm"><input type="text" name="mk_n'+i+'" data-i="'+i+'" maxlength="12" value="'+esc(m.n)+'" aria-label="'+t("название на экране")+'">'
+    +'<small>'+(i?"":"<b>"+t("главный")+"</b> · ")+esc(m.s)+" · "+t(KN[m.k]||"")+(m.p?" · "+(m.c&&m.c!="USD"?price(m.p)+" "+esc(m.c):LANG=="en"?"$"+price(m.p):price(m.p)+" $"):"")+'</small></div>'
     +'<input type="hidden" name="mk_s'+i+'" value="'+esc(m.s)+'"><input type="hidden" name="mk_t'+i+'" value="'+esc(m.t)+'"><input type="hidden" name="mk_k'+i+'" value="'+esc(m.k)+'">'
-    +'<button type="button" class="ib" data-up="'+i+'"'+(i?"":" disabled")+' aria-label="выше"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg></button>'
-    +'<button type="button" class="btn s" data-ch="'+i+'">Заменить</button></div>').join("")}
-function sheet(i){slot=i;$("sh_t").textContent="Заменить «"+MK[i].n+"»";$("q").value="";$("res").innerHTML="";
-  $("chips").innerHTML=POP.map((x,j)=>'<button type="button" data-p="'+j+'">'+esc(x[1])+'</button>').join("");$("chips").style.display="";
+    +'<button type="button" class="ib" data-up="'+i+'"'+(i?"":" disabled")+' aria-label="'+t("выше")+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg></button>'
+    +'<button type="button" class="btn s" data-ch="'+i+'">'+t("Заменить")+'</button></div>').join("")}
+function sheet(i){slot=i;$("sh_t").textContent=t("Заменить")+" "+qq(MK[i].n);$("q").value="";$("res").innerHTML="";
+  $("chips").innerHTML=POP.map((x,j)=>'<button type="button" data-p="'+j+'">'+esc(t(x[1]))+'</button>').join("");$("chips").style.display="";
   $("sheet").classList.add("v");setTimeout(()=>$("q").focus(),50)}
-function pick(m){const j=MK.findIndex(x=>x.s==m.s);if(j>=0&&j!=slot)MK[j]=MK[slot];MK[slot]=m;$("sheet").classList.remove("v");mkrender();toast("«"+m.n+"» — не забудьте «Сохранить»")}
+function pick(m){const j=MK.findIndex(x=>x.s==m.s);if(j>=0&&j!=slot)MK[j]=MK[slot];MK[slot]=m;$("sheet").classList.remove("v");mkrender();toast(qq(m.n)+" "+t("— не забудьте «Сохранить»"))}
 async function msearch(){const q=$("q").value.trim(),r=$("res");$("chips").style.display=q?"none":"";if(!q){r.innerHTML="";return}
-  r.innerHTML='<li class="sub">Ищу…</li>';let a;
-  try{a=demo?POP.filter(x=>(x[0]+x[1]).toLowerCase().includes(q.toLowerCase())).map(x=>({s:x[0],n:x[1],k:x[3],e:"демо"})):await api("/api/msearch?q="+encodeURIComponent(q))}
-  catch(e){r.innerHTML='<li class="sub er">Нет интернета — поиск заработает, когда прибор подключится к Wi-Fi. Пока можно выбрать из популярных.</li>';$("chips").style.display="";return}
+  r.innerHTML='<li class="sub">'+t("Ищу…")+'</li>';let a;
+  try{a=demo?POP.filter(x=>(x[0]+x[1]).toLowerCase().includes(q.toLowerCase())).map(x=>({s:x[0],n:t(x[1]),k:x[3],e:t("демо")})):await api("/api/msearch?q="+encodeURIComponent(q))}
+  catch(e){r.innerHTML='<li class="sub er">'+t("Нет интернета — поиск заработает, когда прибор подключится к Wi-Fi. Пока можно выбрать из популярных.")+'</li>';$("chips").style.display="";return}
   if(q!=$("q").value.trim())return;
-  r.innerHTML=a.length?a.map((x,j)=>'<li data-r="'+j+'">'+disc({s:x.s,n:label(x.n,tickOf(x.s)),k:x.k})+'<div><b>'+esc(x.n)+'</b><small>'+esc(x.s)+(x.e?" · "+esc(x.e):"")+'</small></div><em>'+(KN[x.k]||"")+'</em></li>').join(""):'<li class="sub">Ничего не нашлось — попробуйте название по-английски или тикер</li>';
+  r.innerHTML=a.length?a.map((x,j)=>'<li data-r="'+j+'">'+disc({s:x.s,n:label(x.n,tickOf(x.s)),k:x.k})+'<div><b>'+esc(x.n)+'</b><small>'+esc(x.s)+(x.e?" · "+esc(x.e):"")+'</small></div><em>'+t(KN[x.k]||"")+'</em></li>').join(""):'<li class="sub">'+t("Ничего не нашлось — попробуйте название по-английски или тикер")+'</li>';
   r.a=a}
 function tgbox(){$("tgbox").classList.toggle("off",!$("tg").checked)}
+function labels(){                                                // всё, что зависит от языка и данных (значения в полях не трогает)
+  const c=S.cfg;tStatic();
+  $("where").textContent=t(S.mode=="ap"?"настройки · точка доступа":"настройки · air.local")+(S.pro?" · PRO":" · "+t("бесплатная версия"));
+  $("password").placeholder=c.hasPass?t("сохранён · пусто — не менять"):"";
+  $("pwhint").textContent=S.wifi.ok?"":t("Прибор не смог подключиться — проверьте пароль.");$("pwhint").className="hint er";
+  if(c.cityShown){$("cityres").innerHTML='<span class="ok">✓ '+c.cityShown+'</span> · '+t("часовой пояс определяется сам")}
+  $("tok").placeholder=c.hasTok?t("сохранён · пусто — не менять"):"123456:ABC-DEF…";
+  if(MK.length)mkrender();bind();live();if(lastNets)nets(lastNets);
+  $("save").textContent=t("Сохранить");
+}
 function fill(){
   const c=S.cfg;
-  $("where").textContent=(S.mode=="ap"?"настройки · точка доступа прибора":"настройки · air.local")+(S.pro?" · PRO":" · бесплатная версия");
   document.querySelectorAll("[data-pro]").forEach(e=>{e.classList.toggle("lock",!S.pro);e.querySelectorAll("input,button").forEach(i=>{if(!S.pro)i.disabled=true})});
   document.querySelectorAll(".prolink").forEach(a=>{if(S.proUrl)a.href=S.proUrl;else a.style.display="none"});
   $("exit").style.display=S.mode=="ap"?"":"none";
   $("ssid").value=c.ssid;$("city").value=c.city;
-  $("password").placeholder=c.hasPass?"сохранён · пусто — не менять":"";
-  $("pwhint").textContent=S.wifi.ok?"":"Прибор не смог подключиться — проверьте пароль.";$("pwhint").className="hint er";
-  if(c.cityShown){$("cityres").innerHTML='<span class="ok">✓ '+c.cityShown+'</span> · часовой пояс определяется сам'}
   $("mk_on").checked=S.mk.on;MK=S.mk.list.map(x=>Object.assign({},x));mkrender();mkbox();
-  $("tg").checked=c.tg;$("tok").placeholder=c.hasTok?"сохранён · пусто — не менять":"123456:ABC-DEF…";$("chat").value=c.chat;bind();
+  $("tg").checked=c.tg;$("chat").value=c.chat;
   $("th_co2").value=c.thCO2;$("th_pm").value=c.thPM;$("th_voc").value=c.thVOC;
   $("al_co2").checked=c.alCO2;$("al_pm").checked=c.alPM;$("al_voc").checked=c.alVOC;
-  tgbox();live();
+  tgbox();labels();
 }
 function done(t,s){$("dt").textContent=t;$("ds").textContent=s;$("done").style.display="grid"}
 async function post(u,body){if(demo)return new Promise(r=>setTimeout(()=>r({ok:1}),600));const r=await fetch(u,{method:"POST",body});return r.json()}
 
 document.querySelectorAll("[data-eye]").forEach(b=>{b.innerHTML=eyeOn;b.onclick=()=>{const i=$(b.dataset.eye);i.type=i.type=="password"?"text":"password";b.style.color=i.type=="text"?"var(--am)":""}});
 $("nets").onclick=e=>{const li=e.target.closest("li[data-s]");if(!li)return;$("ssid").value=li.dataset.s;document.querySelectorAll("#nets li").forEach(x=>x.classList.toggle("on",x==li));$("password").value="";$("password").placeholder="";$("password").focus()};
+$("langsel").onchange=e=>{LANG=e.target.value;labels();toast(t("Язык прибора сменится после «Сохранить»"))};
 $("rescan").onclick=scan;$("tg").onchange=tgbox;$("mk_on").onchange=mkbox;
 $("mklist").onclick=e=>{const u=e.target.closest("[data-up]"),c=e.target.closest("[data-ch]");
   if(u){const i=+u.dataset.up;[MK[i-1],MK[i]]=[MK[i],MK[i-1]];mkrender()}else if(c)sheet(+c.dataset.ch)};
@@ -294,38 +361,38 @@ $("mklist").oninput=e=>{const i=e.target.dataset.i;if(i==null)return;const p=e.t
 $("mklist").addEventListener("change",e=>{const i=e.target.dataset.i;if(i==null)return;if(!MK[i].n.trim())MK[i].n=MK[i].t;mkrender()});
 $("sh_x").onclick=()=>$("sheet").classList.remove("v");$("sheet").onclick=e=>{if(e.target.id=="sheet")$("sheet").classList.remove("v")};
 $("q").oninput=()=>{clearTimeout(qt);qt=setTimeout(msearch,400)};
-$("chips").onclick=e=>{const b=e.target.closest("[data-p]");if(b){const x=POP[+b.dataset.p];pick({s:x[0],n:x[1],t:x[2],k:x[3]})}};
+$("chips").onclick=e=>{const b=e.target.closest("[data-p]");if(b){const x=POP[+b.dataset.p];pick({s:x[0],n:t(x[1]),t:x[2],k:x[3]})}};
 $("res").onclick=e=>{const li=e.target.closest("[data-r]");if(li){const x=$("res").a[+li.dataset.r],t=tickOf(x.s);pick({s:x.s,n:label(x.n,t),t:t,k:x.k})}};
-$("chk").onclick=async()=>{const q=$("city").value.trim(),r=$("cityres");if(!q)return;r.textContent="Ищу…";r.className="hint";
+$("chk").onclick=async()=>{const q=$("city").value.trim(),r=$("cityres");if(!q)return;r.textContent=t("Ищу…");r.className="hint";
   try{const j=demo?await new Promise(z=>setTimeout(()=>z({ok:1,name:"Москва, Россия"}),600)):await api("/api/city?q="+encodeURIComponent(q));
-    r.innerHTML=j.ok?'<span class="ok">✓ Найден: '+j.name+'</span>':'<span class="er">Такой город не нашёлся — проверьте название</span>'}
-  catch(e){r.innerHTML='<span class="er">Нет интернета — проверю после подключения к Wi-Fi</span>'}};
-$("tgtest").onclick=async()=>{const r=$("tgres");r.textContent="Отправляю…";r.className="hint";
-  try{const j=await post("/api/tgtest",new URLSearchParams(new FormData($("f"))));r.innerHTML=j.ok?'<span class="ok">✓ '+(j.msg||'Отправлено — проверьте Telegram')+'</span>':'<span class="er">'+(j.err||"Не получилось")+'</span>'}
-  catch(e){r.innerHTML='<span class="er">Нет связи с прибором</span>'}};
-$("bin").onchange=e=>{const f=e.target.files[0];$("fname").textContent=f?f.name+" · "+(f.size/1048576).toFixed(1)+" МБ":"Выбрать файл прошивки .bin";$("flash").disabled=!f};
-$("flash").onclick=()=>{const f=$("bin").files[0];if(!f||!confirm("Обновить прошивку файлом "+f.name+"?"))return;
+    r.innerHTML=j.ok?'<span class="ok">✓ '+t("Найден:")+' '+j.name+'</span>':'<span class="er">'+t("Такой город не нашёлся — проверьте название")+'</span>'}
+  catch(e){r.innerHTML='<span class="er">'+t("Нет интернета — проверю после подключения к Wi-Fi")+'</span>'}};
+$("tgtest").onclick=async()=>{const r=$("tgres");r.textContent=t("Отправляю…");r.className="hint";
+  try{const j=await post("/api/tgtest",new URLSearchParams(new FormData($("f"))));r.innerHTML=j.ok?'<span class="ok">✓ '+(j.msg||t('Отправлено — проверьте Telegram'))+'</span>':'<span class="er">'+(j.err||t("Не получилось"))+'</span>'}
+  catch(e){r.innerHTML='<span class="er">'+t("Нет связи с прибором")+'</span>'}};
+$("bin").onchange=e=>{const f=e.target.files[0];$("fname").textContent=f?f.name+" · "+num(f.size/1048576,1)+" "+t("МБ"):t("Выбрать файл прошивки .bin");$("flash").disabled=!f};
+$("flash").onclick=()=>{const f=$("bin").files[0];if(!f||!confirm(t("Обновить прошивку файлом")+" "+f.name+"?"))return;
   const p=$("prog"),bar=p.firstChild;p.style.display="block";$("flash").disabled=true;
-  if(demo){let v=0;const t=setInterval(()=>{v+=8;bar.style.width=v+"%";if(v>=100){clearInterval(t);done("Прошивка обновлена","Прибор перезагружается…")}},120);return}
+  if(demo){let v=0;const t=setInterval(()=>{v+=8;bar.style.width=v+"%";if(v>=100){clearInterval(t);done(t("Прошивка обновлена"),t("Прибор перезагружается…"))}},120);return}
   const x=new XMLHttpRequest(),d=new FormData();d.append("fw",f);x.open("POST","/update");
   x.upload.onprogress=e=>bar.style.width=(e.loaded/e.total*100)+"%";
-  x.onload=()=>x.status==200?done("Прошивка обновлена","Прибор перезагружается…"):($("fwres").innerHTML='<span class="er">Не получилось: '+x.responseText+'</span>',$("flash").disabled=false);
-  x.onerror=()=>{$("fwres").innerHTML='<span class="er">Связь оборвалась — попробуйте ещё раз</span>';$("flash").disabled=false};x.send(d)};
-$("reboot").onclick=async()=>{if(confirm("Перезагрузить прибор?")){await post("/api/restart");done("Перезагружаюсь","Через 10 секунд прибор снова в работе.")}};
-$("reset").onclick=async()=>{if(confirm("Стереть Wi-Fi, город и Telegram? История показаний останется.")){await post("/api/reset");done("Настройки сброшены","Прибор перезагружается.")}};
-$("exit").onclick=async()=>{await post("/api/exit");done("Вышли без изменений","Прибор возвращается к работе.")};
+  x.onload=()=>x.status==200?done(t("Прошивка обновлена"),t("Прибор перезагружается…")):($("fwres").innerHTML='<span class="er">'+t("Не получилось:")+' '+x.responseText+'</span>',$("flash").disabled=false);
+  x.onerror=()=>{$("fwres").innerHTML='<span class="er">'+t("Связь оборвалась — попробуйте ещё раз")+'</span>';$("flash").disabled=false};x.send(d)};
+$("reboot").onclick=async()=>{if(confirm(t("Перезагрузить прибор?"))){await post("/api/restart");done(t("Перезагружаюсь"),t("Через 10 секунд прибор снова в работе."))}};
+$("reset").onclick=async()=>{if(confirm(t("Стереть Wi-Fi, город и Telegram? История показаний останется."))){await post("/api/reset");done(t("Настройки сброшены"),t("Прибор перезагружается."))}};
+$("exit").onclick=async()=>{await post("/api/exit");done(t("Вышли без изменений"),t("Прибор возвращается к работе."))};
 $("f").onsubmit=async e=>{e.preventDefault();
-  if(!$("ssid").value.trim()){toast("Укажите сеть Wi-Fi");$("ssid").focus();return}
-  if($("tg").checked&&!S.cfg.hasTok&&!$("tok").value.trim()){toast("Для Telegram нужен токен бота");$("tok").focus();return}
-  $("save").disabled=true;$("save").textContent="Сохраняю…";
+  if(!$("ssid").value.trim()){toast(t("Укажите сеть Wi-Fi"));$("ssid").focus();return}
+  if($("tg").checked&&!S.cfg.hasTok&&!$("tok").value.trim()){toast(t("Для Telegram нужен токен бота"));$("tok").focus();return}
+  $("save").disabled=true;$("save").textContent=t("Сохраняю…");
   try{const j=await post("/save",new URLSearchParams(new FormData($("f"))));
-    j.restart?done("Сохранено","Прибор перезагружается и подключается к «"+$("ssid").value+"».") :(toast("Сохранено"),$("save").disabled=false,$("save").textContent="Сохранить",$("password").value="",$("tok").value="",demo||(S=await api("/api/state"),fill()));
-    if(demo)done("Сохранено","Прибор перезагружается и подключается к «"+$("ssid").value+"».")}
-  catch(x){toast("Нет связи с прибором");$("save").disabled=false;$("save").textContent="Сохранить"}};
-(async()=>{try{S=await api("/api/state")}catch(e){demo=true;S=DEMO}
-  fill();scan();
+    j.restart?done(t("Сохранено"),t("Прибор перезагружается и подключается к")+" "+qq($("ssid").value)+".") :(toast(t("Сохранено")),$("save").disabled=false,$("save").textContent=t("Сохранить"),$("password").value="",$("tok").value="",demo||(S=await api("/api/state"),fill()));
+    if(demo)done(t("Сохранено"),t("Прибор перезагружается и подключается к")+" "+qq($("ssid").value)+".")}
+  catch(x){toast(t("Нет связи с прибором"));$("save").disabled=false;$("save").textContent=t("Сохранить")}};
+(async()=>{try{S=await api("/api/state")}catch(e){demo=true;S=DEMO;const ql=(location.search.match(/[?&](en|es)\b/)||[])[1];if(ql){S.cfg.lang=ql;S.cfg.cityShown=ql=="es"?"Moscú, Rusia":"Moscow, Russia";S.mk.list.forEach(m=>m.n=(ql=="es"?ES:EN)[m.n]||m.n)}}
+  LANG=["ru","en","es"].includes(S.cfg.lang)?S.cfg.lang:"ru";fill();scan();
   if(!demo)setInterval(async()=>{try{const n=await api("/api/state");S.live=n.live;S.wifi=n.wifi;S.up=n.up;live();
-    if(!$("sheet").classList.contains("v")&&!$("mklist").contains(document.activeElement)){let ch=0;n.mk.list.forEach((x,i)=>{if(MK[i]&&MK[i].s==x.s&&MK[i].p!=x.p){MK[i].p=x.p;MK[i].c=x.c;ch=1}});if(ch)mkrender()}if(n.cfg.chat&&n.cfg.chat!=S.cfg.chat){S.cfg.chat=n.cfg.chat;$("chat").value=n.cfg.chat;bind();toast("Чат привязан")}}catch(e){}},5000)})();
+    if(!$("sheet").classList.contains("v")&&!$("mklist").contains(document.activeElement)){let ch=0;n.mk.list.forEach((x,i)=>{if(MK[i]&&MK[i].s==x.s&&MK[i].p!=x.p){MK[i].p=x.p;MK[i].c=x.c;ch=1}});if(ch)mkrender()}if(n.cfg.chat&&n.cfg.chat!=S.cfg.chat){S.cfg.chat=n.cfg.chat;$("chat").value=n.cfg.chat;bind();toast(t("Чат привязан"))}}catch(e){}},5000)})();
 </script>
 </body>
 </html>

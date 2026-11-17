@@ -219,7 +219,7 @@ static double lastT = 0;
 // время анимаций. Раньше было micros() — 32 бита, обнуляется каждые 71,6 минуты: все «прошло с момента…» становились отрицательными
 static inline double nowMs() { return (double)esp_timer_get_time() / 1000.0; }
 static void hhmm(char* o) { if (clk.ok) snprintf(o, 6, "%02d:%02d", clk.hh, clk.mm); else strcpy(o, "--:--"); }
-static void hdate(char* o) { if (clk.ok) snprintf(o, 40, "%s · %d %s", app::WDAY[clk.wday], clk.mday, app::MONTH[clk.mon]); else o[0] = 0; }
+static void hdate(char* o) { if (clk.ok) snprintf(o, 40, "%s · %d %s", app::wday(clk.wday), clk.mday, app::month(clk.mon)); else o[0] = 0; }
 
 #if AIR_PRO   // ---- всё, что нужно экранам PRO ----
 static uint32_t seenWx = 0xFFFFFFFF, seenMk = 0xFFFFFFFF, chartsAt = 0;
@@ -253,16 +253,16 @@ static int wxIconOf(int code, bool day) {
 }
 static int footIcon = -1, footScore = -1; static cvs::Col footScol;
 static bool footerUpdate() {             // true — надписи вокруг часов изменились
-  if (clk.ok) snprintf(footDate, sizeof footDate, "%s  ·  %d %s", app::WDAY[clk.wday], clk.mday, app::MONTH[clk.mon]); else strcpy(footDate, "ЖДУ ВРЕМЯ ПО WI-FI");
+  if (clk.ok) snprintf(footDate, sizeof footDate, "%s  ·  %d %s", app::wday(clk.wday), clk.mday, app::month(clk.mon)); else strcpy(footDate, L("ЖДУ ВРЕМЯ ПО WI-FI", "WAITING FOR TIME · WI-FI"));
   { app::Wx w; { Lock lk; w = G.wx; }      // улица: «21° ясно» (если погода свежее 3 часов)
     if (w.ok && millis() - w.atMs < 3UL * 3600000UL) { const int t = (int)lroundf(w.temp); snprintf(footOut, sizeof footOut, "%s%d°  %s", t < 0 ? "−" : "", abs(t), app::wxDesc(w.code)); footIcon = wxIconOf(w.code, w.day); }
     else { footOut[0] = 0; footIcon = -1; } }
   static const int mi[5] = {0, 1, 2, 3, 5};   // строки air::M: температура, влажность, CO₂, VOC, PM2.5
-  static const char* lab[5] = {"ТЕМП.", "ВЛАГА", "CO₂", "VOC", "PM2.5"};
+  const char* lab[5] = {L("ТЕМП.", "TEMP"), L("ВЛАГА", "HUMID"), "CO₂", "VOC", "PM2.5"};
   for (int i = 0; i < 5; i++) {
     const air::Metric& m = air::M[mi[i]]; flip::Cell& c = footCell[i]; const float v = live.v[m.k];
     c.lab = lab[i]; c.ok = live.ok[m.k]; c.col = air::col(m, v); c.tr = trendOf(i);
-    if (i == 0) { snprintf(c.val, sizeof c.val, "%.1f°", v); for (char* p = c.val; *p; p++) if (*p == '.') *p = ','; }
+    if (i == 0) { snprintf(c.val, sizeof c.val, "%.1f°", v); for (char* p = c.val; *p; p++) if (*p == '.' && !en()) *p = ','; }
     else if (i == 1) snprintf(c.val, sizeof c.val, "%d%%", (int)lroundf(v));
     else snprintf(c.val, sizeof c.val, "%d", (int)lroundf(v));
   }
@@ -302,11 +302,11 @@ static int wxFill() {                    // погода из общего хр�
   app::Wx w; uint32_t seq; { Lock lk; w = G.wx; seq = G.wxSeq; }
   seenWx = seq;
   wx::Data& d = wx::D;
-  if (!w.ok) { d.ok = false; strcpy(d.city, "ПОГОДА"); d.sub[0] = 0; strcpy(d.desc, "нет данных — жду Wi-Fi"); return WS_CLOUDY; }
+  if (!w.ok) { d.ok = false; strcpy(d.city, L("ПОГОДА", "WEATHER")); d.sub[0] = 0; strcpy(d.desc, L("нет данных — жду Wi-Fi", "no data — waiting for Wi-Fi")); return WS_CLOUDY; }
   d.ok = true; strlcpy(d.city, w.city, sizeof d.city);
   const uint32_t ageMin = (millis() - w.atMs) / 60000;
-  if (ageMin > 180) snprintf(d.sub, sizeof d.sub, "— %lu ч назад", (unsigned long)(ageMin / 60));
-  else if (clk.ok) snprintf(d.sub, sizeof d.sub, "— %s %02d:00", app::WDAY[clk.wday], w.hour0);
+  if (ageMin > 180) snprintf(d.sub, sizeof d.sub, L("— %lu ч назад", "— %lu h ago"), (unsigned long)(ageMin / 60));
+  else if (clk.ok) snprintf(d.sub, sizeof d.sub, "— %s %02d:00", app::wday(clk.wday), w.hour0);
   else d.sub[0] = 0;
   d.t = (int)lroundf(w.temp); d.feels = (int)lroundf(w.feels); d.hi = (int)lroundf(w.hi); d.lo = (int)lroundf(w.lo);
   d.wind = (int)lroundf(w.wind); d.hum = w.hum; d.wa = w.windDir; strlcpy(d.wd, app::windName(w.windDir), sizeof d.wd);
@@ -325,9 +325,9 @@ static void mkFill() {
   { bool same = true; const char* c0 = nullptr;   // валюта в шапке — только если у всех одна
     for (const app::Asset& a : markets::A) if (a.cur[0]) { if (!c0) c0 = a.cur; else if (strcmp(c0, a.cur)) same = false; }
     snprintf(markets::cur, sizeof markets::cur, "%s", same ? (c0 ? c0 : "USD") : ""); }
-  if (!wifi) strcpy(markets::note, "нет сети");
-  else if (!at) strcpy(markets::note, fresh ? "" : "загружаю…");
-  else { const uint32_t m = (millis() - at) / 60000; if (m < 1) strcpy(markets::note, "только что"); else snprintf(markets::note, sizeof markets::note, "%lu мин назад", (unsigned long)m); }
+  if (!wifi) strcpy(markets::note, L("нет сети", "offline"));
+  else if (!at) strcpy(markets::note, fresh ? "" : L("загружаю…", "loading…"));
+  else { const uint32_t m = (millis() - at) / 60000; if (m < 1) strcpy(markets::note, L("только что", "just now")); else snprintf(markets::note, sizeof markets::note, L("%lu мин назад", "%lu min ago"), (unsigned long)m); }
   if (seq != drawnSeq) { drawnSeq = seq; markets::dataChanged(); }   // новые котировки — пересобрать карточки
   else markets::timeChanged();                                        // иначе поменялась только подпись в шапке
 }

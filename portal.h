@@ -22,8 +22,8 @@ inline void draw() {
   resetState();
   const Col CR = hex(0xF4E7D4), AM = hex(0xFFB54A), TL = hex(0x4FB0B8), INK = hex(0x16100D);
   fillRect(0, 0, gx::W, gx::H, linear(0, 0, 0, gx::H).stop(0, hex(0x1b130f)).stop(1, hex(0x0b0807)));
-  fillText(F_ON10B, "НАСТРОЙКИ", 12, 22, withA(CR, 0.92f), AL_LEFT, 2.4f);
-  fillText(F_JB85M, "с телефона", 282, 22, withA(CR, 0.55f), AL_RIGHT);
+  fillText(F_ON10B, L("НАСТРОЙКИ", "SETUP"), 12, 22, withA(CR, 0.92f), AL_LEFT, 2.4f);
+  fillText(F_JB85M, L("с телефона", "from your phone"), 282, 22, withA(CR, 0.55f), AL_RIGHT);
 
   // QR: кремовая плашка с полями в 2 модуля, модуль 5 px
   constexpr int M = 5, QX = 12, QY = 34, PAD = 10, QS = QN * M + PAD * 2;
@@ -36,16 +36,16 @@ inline void draw() {
     } }
 
   const float X = QX + QS + 14;
-  fillText(F_LI14I, "наведите камеру", X, 50, CR);
-  fillText(F_LI14I, "на код", X, 67, CR);
+  fillText(F_LI14I, L("наведите камеру", "scan the"), X, 50, CR);
+  fillText(F_LI14I, L("на код", "QR code"), X, 67, CR);
   fillRectAA(X, 79, 308 - X, 1, 0xF4, 0xE7, 0xD4, 0.16f);
-  fillText(F_JB8M, "ИЛИ ВРУЧНУЮ · WI-FI", X, 96, withA(CR, 0.5f));
+  fillText(F_JB8M, L("ИЛИ ВРУЧНУЮ · WI-FI", "OR MANUALLY · WI-FI"), X, 96, withA(CR, 0.5f));
   fillText(F_ON105B, AP_SSID, X, 111, AM);
-  fillText(F_JB8M, "ПАРОЛЬ", X, 133, withA(CR, 0.5f));
+  fillText(F_JB8M, L("ПАРОЛЬ", "PASSWORD"), X, 133, withA(CR, 0.5f));
   fillText(F_JB105B, AP_PASS, X, 148, CR);
-  fillText(F_JB8M, "АДРЕС В БРАУЗЕРЕ", X, 170, withA(CR, 0.5f));
+  fillText(F_JB8M, L("АДРЕС В БРАУЗЕРЕ", "OPEN IN BROWSER"), X, 170, withA(CR, 0.5f));
   fillText(F_JB105B, AP_IP, X, 185, TL);
-  fillText(F_JB85M, "держать кнопку 5 с — выйти без изменений", 12, 228, withA(CR, 0.55f));
+  fillText(F_JB85M, L("держать кнопку 5 с — выйти без изменений", "hold the button 5 s — exit without changes"), 12, 228, withA(CR, 0.55f));
 }
 
 }  // namespace portal

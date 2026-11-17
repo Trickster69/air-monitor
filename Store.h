@@ -39,6 +39,7 @@ struct RuntimeConfig {
   uint32_t telegramMuteUntilEpoch = 0;
   uint16_t thPM25 = 16, thCO2 = 1000, thVOC = 250;   // пороги уведомлений (VOC — индекс SGP41)
   bool mkEnabled = true;                             // показывать экран «Рынки»
+  uint8_t lang = LANG_RU;                            // язык экранов, страницы настроек и Telegram
   struct MkCfg { char sym[20], name[28], tick[10]; char kind; } mk[app::ASSET_N] = {};   // пять активов, первый — на большой карточке
   // кэш геокодинга и часового пояса
   char geoCity[32] = "", cityShown[32] = ""; float lat = 0, lon = 0; int32_t utcOff = Config::gmtOffset_sec;
@@ -52,7 +53,7 @@ inline void cfgDefaults() {
   if (!cfg.timezone[0]) strlcpy(cfg.timezone, Config::Weather::TIMEZONE, sizeof cfg.timezone);
   for (int i = 0; i < app::ASSET_N; i++) if (!cfg.mk[i].sym[0]) {
     const app::AssetDef& d = app::ASSET_DEF[i];
-    strlcpy(cfg.mk[i].sym, d.sym, sizeof cfg.mk[i].sym); strlcpy(cfg.mk[i].name, d.name, sizeof cfg.mk[i].name); strlcpy(cfg.mk[i].tick, d.tick, sizeof cfg.mk[i].tick); cfg.mk[i].kind = d.kind;
+    strlcpy(cfg.mk[i].sym, d.sym, sizeof cfg.mk[i].sym); strlcpy(cfg.mk[i].name, L(d.name, d.nameEn), sizeof cfg.mk[i].name); strlcpy(cfg.mk[i].tick, d.tick, sizeof cfg.mk[i].tick); cfg.mk[i].kind = d.kind;
   }
 }
 static inline void getStr(const char* k, char* dst, size_t n) { dst[0] = 0; if (cfgPrefs.isKey(k)) cfgPrefs.getBytes(k, dst, n); dst[n - 1] = 0; }
@@ -70,6 +71,7 @@ inline void cfgLoad() {
   if (cfgPrefs.getBytesLength("mk_list") == sizeof cfg.mk) cfgPrefs.getBytes("mk_list", cfg.mk, sizeof cfg.mk);
   for (auto& m : cfg.mk) { m.sym[sizeof m.sym - 1] = 0; m.name[sizeof m.name - 1] = 0; m.tick[sizeof m.tick - 1] = 0; }
   gMkEnabled = cfg.mkEnabled;
+  cfg.lang = cfgPrefs.getUChar("lang", LANG_RU); if (cfg.lang >= LANG_N) cfg.lang = LANG_RU; gLang = cfg.lang;   // до cfgDefaults: имена активов по умолчанию — на этом языке
   cfg.lat = cfgPrefs.getFloat("geo_lat", 0); cfg.lon = cfgPrefs.getFloat("geo_lon", 0); cfg.utcOff = cfgPrefs.getInt("utc_off", Config::gmtOffset_sec);
   cfgDefaults();
 }
@@ -82,6 +84,7 @@ inline void cfgSave() {
   cfgPrefs.putUInt("tg_mute", cfg.telegramMuteUntilEpoch);
   cfgPrefs.putUShort("tg_th_pm", cfg.thPM25); cfgPrefs.putUShort("tg_th_co2", cfg.thCO2); cfgPrefs.putUShort("tg_th_voi", cfg.thVOC);
   cfgPrefs.putBool("mk_en", cfg.mkEnabled); cfgPrefs.putBytes("mk_list", cfg.mk, sizeof cfg.mk);
+  cfgPrefs.putUChar("lang", cfg.lang);
 }
 // выбранные активы -> общие данные (котировки обнуляются и качаются заново)
 inline void mkApply() {

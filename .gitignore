@@ -9,6 +9,7 @@
 !/*.h
 !/partitions.csv
 !/make_release.py
+!/lang_check.py
 !/web/
 /web/*
 !/web/index.html

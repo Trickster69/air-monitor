@@ -10,12 +10,14 @@ using namespace cvs;
 
 enum { K_T, K_H, K_C, K_V, K_N, K_P1, K_P, K_P10, NK };   // = app::M_*
 constexpr float NI = -1e9f;
-struct Mt { const char* lab; const char* sen; const char* u; bool dec; float g0, g1, m0, m1, s0, s1; };
+struct Mt { const char* lab; const char* sen; const char* u; bool dec; float g0, g1, m0, m1, s0, s1; const char* labEn; const char* uEn; };
 inline const Mt MT[NK] = {
-  {"ТЕМП.", nullptr, "°C", true, 19, 25, 16, 28, 14, 32}, {"ВЛАЖН.", nullptr, "%", false, 40, 60, 30, 70, 0, 100},
-  {"CO₂", nullptr, "ppm", false, NI, 800, NI, 1200, 400, 2000}, {"VOC", "SGP41", "индекс", false, NI, 150, NI, 250, 0, 500},
-  {"NOx", "SGP41", "индекс", false, NI, 20, NI, 150, 0, 300}, {"PM1", nullptr, nullptr, false, NI, 10, NI, 25, 0, 60},
-  {"PM2.5", nullptr, nullptr, false, NI, 12, NI, 35, 0, 75}, {"PM10", nullptr, nullptr, false, NI, 45, NI, 100, 0, 150}};
+  {"ТЕМП.", nullptr, "°C", true, 19, 25, 16, 28, 14, 32, "TEMP", "°C"}, {"ВЛАЖН.", nullptr, "%", false, 40, 60, 30, 70, 0, 100, "HUMIDITY", "%"},
+  {"CO₂", nullptr, "ppm", false, NI, 800, NI, 1200, 400, 2000, "CO₂", "ppm"}, {"VOC", "SGP41", "индекс", false, NI, 150, NI, 250, 0, 500, "VOC", "index"},
+  {"NOx", "SGP41", "индекс", false, NI, 20, NI, 150, 0, 300, "NOx", "index"}, {"PM1", nullptr, nullptr, false, NI, 10, NI, 25, 0, 60, "PM1", nullptr},
+  {"PM2.5", nullptr, nullptr, false, NI, 12, NI, 35, 0, 75, "PM2.5", nullptr}, {"PM10", nullptr, nullptr, false, NI, 45, NI, 100, 0, 150, "PM10", nullptr}};
+inline const char* lab(int k) { return L(MT[k].lab, MT[k].labEn); }
+inline const char* unit(int k) { return L(MT[k].u, MT[k].uEn); }
 // сценарии для проверки на ПК: норма / сейчас / готовка
 inline const float SC[3][NK] = {{22.4f, 48, 620, 98, 1, 4, 6, 9}, {22.8f, 52, 870, 112, 3, 5, 8, 12}, {24.6f, 68, 1350, 340, 180, 33, 46, 64}};
 inline float val[NK], tgt[NK];
@@ -49,11 +51,11 @@ inline void initParticles() {
 
 // цвет зоны считается по настоящему значению датчика, а не по «доезжающему»: пока стрелка едет, готовый слой не пересобирается
 inline Col col(int k) { if (!ok[k]) return NEU; const Mt& m = MT[k]; float v = tgt[k]; if (v >= m.g0 && v <= m.g1) return TL; if (v >= m.m0 && v <= m.m1) return AM; return RD; }
-inline const char* word(Col c) { return same(c, TL) ? "" : same(c, NEU) ? "НЕТ ДАННЫХ" : same(c, AM) ? "ВНИМАНИЕ" : "ПЛОХО"; }
+inline const char* word(Col c) { return same(c, TL) ? "" : same(c, NEU) ? L("НЕТ ДАННЫХ", "NO DATA") : same(c, AM) ? L("ВНИМАНИЕ", "WARNING") : L("ПЛОХО", "POOR"); }
 inline float fr(int k) { return clampf((val[k] - MT[k].s0) / (MT[k].s1 - MT[k].s0), 0, 1); }
 inline void fmt(int k, char* out) {
   if (!ok[k]) { strcpy(out, "−−"); return; }
-  if (MT[k].dec) { snprintf(out, 16, "%.1f", val[k]); for (char* p = out; *p; p++) if (*p == '.') *p = ','; }
+  if (MT[k].dec) { snprintf(out, 16, "%.1f", val[k]); for (char* p = out; *p; p++) if (*p == '.' && !en()) *p = ','; }
   else snprintf(out, 16, "%d", (int)floorf(val[k] + 0.5f));
 }
 
@@ -95,8 +97,8 @@ inline void card(float x, float y, float w, float h, int k, float t) {
 inline void label(float x, float y, int k, float right, bool wide = true) {   // wide — в карточке хватает места на «НЕТ ДАННЫХ»
   if (!S_()) return;
   const Mt& m = MT[k]; const Col c = col(k);
-  fillText(F_ON85B, m.lab, x, y, CRa(0.75f), AL_LEFT, 1.4f);
-  const float lw = measure(F_ON85B, m.lab, 1.4f);
+  fillText(F_ON85B, lab(k), x, y, CRa(0.75f), AL_LEFT, 1.4f);
+  const float lw = measure(F_ON85B, lab(k), 1.4f);
   if (m.sen) fillText(F_JB85M, m.sen, x + lw + 3, y, CRa(0.60f));
   const char* wd = word(c);
   const float used = x + lw + (m.sen ? measure(F_JB85M, m.sen) + 3 : 0) + 5;   // слово состояния пишем, только если оно не наедет на подпись (цвет карточки и так его показывает)
@@ -217,7 +219,7 @@ inline void dustBox(float x, float y, float w, float h, float t) {
     fastCircle(px_, py_, sz[d.cls], same(c, TL) ? CRa(0.35f + 0.5f * tw) : withA(c, 0.4f + 0.55f * tw));
   }
   restore();
-  fillText(F_JB8M, "ВОЗДУХ ×1000", x + 5, y + h - 4, CRa(0.60f));
+  fillText(F_JB8M, L("ВОЗДУХ ×1000", "AIR ×1000"), x + 5, y + h - 4, CRa(0.60f));
 }
 
 inline void drawAll(float t, float e) {
@@ -231,7 +233,7 @@ inline void drawAll(float t, float e) {
     save(); card(x, y, w, h, k, t); label(x + 9, y + 13, k, x + w - 8, false);
     if (i == 0) thermo(x + 25, y + 44, t); else if (i == 1) drop(x + 25, y + 44, t); else molecule(x + (val[K_C] >= 999.5f ? 19 : 25), y + 45, t);
     if (D_()) { fmt(k, b); fillText(strlen(b) >= 4 && k == K_C ? F_LI24 : F_LI27, b, x + w - 8, y + 52, ok[k] ? CR : CRa(0.45f), AL_RIGHT); }
-    if (S_()) fillText(F_JB9B, MT[k].u, x + w - 8, y + 63, col(k), AL_RIGHT);
+    if (S_()) fillText(F_JB9B, unit(k), x + w - 8, y + 63, col(k), AL_RIGHT);
     bar(x + 9, x + w - 9, y + 72, k);
     restore();
   }
@@ -244,7 +246,7 @@ inline void drawAll(float t, float e) {
     if (i == 0) ripples(k, x + 22, y + 27, t); else wisps(k, x + 22, y + 27, t);
     label(x + 44, y + 14, k, x + w - 8);
     fmt(k, b); const float vw = measure(F_LI25, b);
-    if (D_()) { fillText(F_LI25, b, x + 43, y + 40, ok[k] ? CR : CRa(0.45f)); fillText(F_JB9B, MT[k].u, x + 47 + vw, y + 40, col(k)); }   // единица сдвигается вместе с числом
+    if (D_()) { fillText(F_LI25, b, x + 43, y + 40, ok[k] ? CR : CRa(0.45f)); fillText(F_JB9B, unit(k), x + 47 + vw, y + 40, col(k)); }   // единица сдвигается вместе с числом
     bar(x + 44, x + w - 9, y + 47, k);
     restore();
   }
@@ -259,14 +261,15 @@ inline void drawAll(float t, float e) {
       if (S_()) { const Paint f = solid(calm(worst) ? CRa(0.10f) : withA(worst, 0.18f)); const Col sk = calm(worst) ? CRa(0.30f) : withA(worst, 0.5f); fastRRect(x, y, w, h, 8, &f, &sk, 0.7f); }
       dustBox(x + 5, y + 5, 112, h - 10, t);
       if (S_()) {
-        fillText(F_ON85B, "ЧАСТИЦЫ", x + 126, y + 13, CRa(0.75f), AL_LEFT, 1.4f);
-        fillText(F_JB85M, "мкг/м³", x + 126 + measure(F_ON85B, "ЧАСТИЦЫ", 1.4f) + 4, y + 13, CRa(0.60f));
+        const char* pt = L("ЧАСТИЦЫ", "PARTICLES");
+        fillText(F_ON85B, pt, x + 126, y + 13, CRa(0.75f), AL_LEFT, 1.4f);
+        fillText(F_JB85M, L("мкг/м³", "µg/m³"), x + 126 + measure(F_ON85B, pt, 1.4f) + 4, y + 13, CRa(0.60f));
         const char* wd = word(worst); if (wd[0]) fillText(F_JB8B, wd, x + w - 8, y + 13, same(worst, NEU) ? CRa(0.6f) : worst, AL_RIGHT);
       }
       const int pk[3] = {K_P1, K_P, K_P10};
       for (int j = 0; j < 3; j++) {
         const int k = pk[j]; const float cx = x + 126 + j * 58; const Col c = col(k);
-        if (S_()) { fastCircle(cx + 2, y + 23, 1.6f, c); fillText(F_JB85M, MT[k].lab, cx + 7, y + 25.5f, CRa(0.6f)); }
+        if (S_()) { fastCircle(cx + 2, y + 23, 1.6f, c); fillText(F_JB85M, lab(k), cx + 7, y + 25.5f, CRa(0.6f)); }
         if (D_()) { fmt(k, b); fillText(F_LI24, b, cx - 1, y + 47, ok[k] ? CR : CRa(0.45f)); }
         bar(cx, cx + 48, y + 55, k);
       }

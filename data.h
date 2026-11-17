@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include "lang.h"
 
 namespace app {
 
@@ -36,8 +37,8 @@ struct Asset {
 };
 constexpr int ASSET_N = 5;
 // набор по умолчанию; свой выбирается на странице настроек (раздел «Рынки»)
-struct AssetDef { const char* sym; const char* name; const char* tick; char kind; };
-inline const AssetDef ASSET_DEF[ASSET_N] = {{"BTC-USD", "БИТКОИН", "BTC", 'c'}, {"ETH-USD", "ЭФИР", "ETH", 'c'}, {"GC=F", "ЗОЛОТО", "XAU", 'f'}, {"CL=F", "НЕФТЬ", "WTI", 'f'}, {"^GSPC", "S&P 500", "SPX", 'i'}};
+struct AssetDef { const char* sym; const char* name; const char* tick; char kind; const char* nameEn; };
+inline const AssetDef ASSET_DEF[ASSET_N] = {{"BTC-USD", "БИТКОИН", "BTC", 'c', "BITCOIN"}, {"ETH-USD", "ЭФИР", "ETH", 'c', "ETHER"}, {"GC=F", "ЗОЛОТО", "XAU", 'f', "GOLD"}, {"CL=F", "НЕФТЬ", "WTI", 'f', "OIL"}, {"^GSPC", "S&P 500", "SPX", 'i', "S&P 500"}};
 inline void assetSet(Asset& a, const char* sym, const char* name, const char* tick, char kind) {
   memset(&a, 0, sizeof a);
   snprintf(a.sym, sizeof a.sym, "%s", sym); snprintf(a.name, sizeof a.name, "%s", name); snprintf(a.tick, sizeof a.tick, "%s", tick); a.kind = kind;
@@ -114,7 +115,16 @@ inline bool histValid(const HistFile& f) {
 }
 
 // ---------- погода: код Open-Meteo -> описание ----------
-inline const char* wxDesc(int c) {
+inline const char* wxDescEn(int c) {
+  if (c == 0) return "clear"; if (c == 1) return "mostly clear"; if (c == 2) return "partly cloudy"; if (c == 3) return "overcast";
+  if (c == 45) return "fog"; if (c == 48) return "freezing fog"; if (c == 56 || c == 57) return "freezing drizzle"; if (c >= 51 && c <= 55) return "drizzle";
+  if (c == 61) return "light rain"; if (c == 65) return "heavy rain"; if (c == 66 || c == 67) return "freezing rain"; if (c >= 61 && c <= 67) return "rain";
+  if (c == 71) return "light snow"; if (c == 75) return "heavy snow"; if (c == 77) return "snow grains"; if (c >= 71 && c <= 77) return "snow";
+  if (c == 80) return "light showers"; if (c == 82) return "heavy showers"; if (c >= 80 && c <= 82) return "showers"; if (c == 85 || c == 86) return "snow showers";
+  if (c == 96 || c == 99) return "thunderstorm, hail"; if (c >= 95) return "thunderstorm"; return "cloudy";
+}
+inline const char* wxDesc(int c) {                    // по-испански — через таблицу lang_es.h
+  if (gLang != LANG_RU) return L("", wxDescEn(c));
   if (c == 0) return "ясно";
   if (c == 1) return "малооблачно";
   if (c == 2) return "переменная облачность";
@@ -140,10 +150,16 @@ inline const char* wxDesc(int c) {
   return "облачно";
 }
 inline const char* windName(int deg) {
-  static const char* n[8] = {"С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"};
-  return n[(((deg % 360) + 360) % 360 * 2 + 45) / 90 % 8];
+  static const char* n[8] = {"С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"}; static const char* ne[8] = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"}; static const char* ns[8] = {"N", "NE", "E", "SE", "S", "SO", "O", "NO"};
+  const int i = (((deg % 360) + 360) % 360 * 2 + 45) / 90 % 8; return en() ? ne[i] : es() ? ns[i] : n[i];
 }
-inline const char* WDAY[7] = {"ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"};
-inline const char* MONTH[12] = {"ЯНВ", "ФЕВ", "МАР", "АПР", "МАЯ", "ИЮН", "ИЮЛ", "АВГ", "СЕН", "ОКТ", "НОЯ", "ДЕК"};
+inline const char* WDAY_RU[7] = {"ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"};
+inline const char* WDAY_EN[7] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+inline const char* WDAY_ES[7] = {"DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"};
+inline const char* wday(int i) { return en() ? WDAY_EN[i] : es() ? WDAY_ES[i] : WDAY_RU[i]; }
+inline const char* MONTH_RU[12] = {"ЯНВ", "ФЕВ", "МАР", "АПР", "МАЯ", "ИЮН", "ИЮЛ", "АВГ", "СЕН", "ОКТ", "НОЯ", "ДЕК"};
+inline const char* MONTH_EN[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+inline const char* MONTH_ES[12] = {"ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"};
+inline const char* month(int i) { return en() ? MONTH_EN[i] : es() ? MONTH_ES[i] : MONTH_RU[i]; }
 
 }  // namespace app

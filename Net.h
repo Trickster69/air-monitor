@@ -93,7 +93,7 @@ static inline void urlEnc(const char* in, char* out, size_t n) {
 // поиск города: 1 — найден, 0 — такого нет, -1 — нет связи. Настройки не трогает (им же пользуется страница настроек)
 inline int geoLookup(const char* city, char* name, size_t nn, char* country, size_t cn, float& lat, float& lon) {
   char q[100], url[220]; urlEnc(city, q, sizeof q);
-  snprintf(url, sizeof url, "http://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=ru&format=json", q);
+  snprintf(url, sizeof url, "http://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=%s&format=json", q, langCode(gLang));
   JsonDocument filter(&psAlloc), doc(&psAlloc);
   filter["results"][0]["latitude"] = true; filter["results"][0]["longitude"] = true; filter["results"][0]["name"] = true; filter["results"][0]["country"] = true;
   if (!getJson(url, false, doc, filter)) return -1;

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+#include "lang.h"
 
 #ifndef GX_ALLOC
 #define GX_ALLOC(n) malloc(n)
