@@ -4,149 +4,315 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Монитор воздуха — прошивка</title>
-<meta name="description" content="Установка прошивки монитора воздуха на ESP32-S3 прямо из браузера · Air monitor firmware installer · Instalador del firmware">
+<meta name="description" content="Домашний монитор воздуха на ESP32-S3: прошивка прямо из браузера · Air monitor firmware installer · Instalador del firmware">
+<meta name="theme-color" content="#0e0906">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23ffb54a'/%3E%3Cpath d='M4 9.5h10a3 3 0 1 0-3-3M4 14h13a3 3 0 1 1-3 3M4 18.5h6' fill='none' stroke='%231a120c' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Literata:opsz,wght@7..72,500;7..72,600&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="module" src="https://unpkg.com/esp-web-tools@10.1.0/dist/web/install-button.js?module"></script>
 <style>
-:root{--bg:#120d0a;--card:#1d1511;--card2:#261c16;--line:#3a2d25;--cr:#f4e7d4;--dim:#a8998a;--am:#ffb54a;--tl:#4fb0b8;--rd:#e5483b;--gr:#7cc47a}
+:root{
+  --bg:#0e0906;--bg2:#160f0b;--card:#1a120d;--card2:#22180f;--line:#33261c;--line2:#4a372a;
+  --cr:#f4e7d4;--dim:#a8998a;--dim2:#7a6c5f;--am:#ffb54a;--am2:#ff8a3d;--tl:#4fb0b8;--rd:#e5483b;--gr:#7cc47a;
+  --serif:"Literata",Georgia,serif;--sans:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--cr);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:620px;margin:0 auto;padding:28px 16px 48px}
-header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.logo{width:44px;height:44px;border-radius:12px;background:var(--am);display:grid;place-items:center;flex:none}
-h1{font-size:22px;margin:0;line-height:1.2}
-.sub{color:var(--dim);font-size:14px}
-.lang{margin-left:auto;position:relative;display:flex;align-items:center;gap:6px;height:38px;padding:0 10px 0 9px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--cr);font:700 13px system-ui,sans-serif;letter-spacing:.6px;flex:none;cursor:pointer;align-self:flex-start}
-.lang svg{flex:none}.lang .gl{color:var(--am)}.lang .ch{color:var(--dim)}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--cr);font:16px/1.5 var(--sans);overflow-x:hidden}
+a{color:inherit}
+/* зерно поверх всего — как в ролике */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+
+/* ---- верхняя полоса */
+.top{display:flex;align-items:center;gap:12px;height:72px}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--am);display:grid;place-items:center;flex:none;box-shadow:0 0 24px #ffb54a40}
+.brand{font:600 15px var(--sans);letter-spacing:.01em}
+.brand i{font-style:normal;color:var(--dim)}
+.top .sp{flex:1}
+.gh{display:flex;align-items:center;gap:7px;height:38px;padding:0 12px;border-radius:12px;border:1px solid var(--line);color:var(--dim);text-decoration:none;font:500 13px var(--sans)}
+.gh:hover{color:var(--cr);border-color:var(--line2)}
+.lang{position:relative;display:flex;align-items:center;gap:6px;height:38px;padding:0 10px 0 9px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--cr);font:700 13px var(--mono);letter-spacing:.04em;flex:none;cursor:pointer}
+.lang .gl{color:var(--am)}.lang .ch{color:var(--dim)}
 .lang select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
 .lang:focus-within{border-color:var(--am);box-shadow:0 0 0 3px #ffb54a26}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:12px}
-h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 12px;display:flex;align-items:center;gap:8px}
-.tag{padding:2px 7px;border-radius:6px;background:var(--am);color:#1a120c;font-size:11px;font-weight:700;letter-spacing:.06em}
-.tag.f{background:var(--tl)}
-h3{font-size:20px;margin:0 0 4px}
-p{margin:0 0 12px}
-ol{margin:0;padding-left:20px}
-ol li{margin:6px 0}
-.btn{appearance:none;border:0;border-radius:12px;min-height:52px;padding:10px 20px;width:100%;font-family:inherit;font-size:17px;font-weight:600;line-height:1.2;cursor:pointer;background:var(--am);color:#1a120c;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center}
-.btn:hover{filter:brightness(1.07)}
-.btn:disabled{background:var(--card2);color:var(--dim);cursor:not-allowed;filter:none}
-.btn.g{background:var(--card2);color:var(--cr);border:1px solid var(--line)}
-.ver{display:flex;justify-content:space-between;color:var(--dim);font-size:14px;margin-bottom:12px}
-.ver b{color:var(--cr);font-weight:600}
-.drop{display:block;border:1.5px dashed var(--line);border-radius:14px;padding:22px 14px;text-align:center;color:var(--dim);cursor:pointer;margin-bottom:10px;transition:border-color .15s,background .15s}
+
+/* ---- первый экран */
+.hero{display:grid;grid-template-columns:1fr 1.08fr;gap:56px;align-items:center;padding:40px 0 72px;min-height:min(760px,calc(100vh - 72px))}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--am);display:flex;gap:10px;align-items:center;margin-bottom:22px}
+.eyebrow b{width:7px;height:7px;border-radius:50%;background:var(--gr);box-shadow:0 0 10px var(--gr);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+h1{font:500 clamp(44px,6.2vw,76px)/1.02 var(--serif);letter-spacing:-.02em;margin:0 0 22px}
+h1 em{font-style:normal;background:linear-gradient(100deg,var(--am) 10%,var(--am2) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:var(--dim);max-width:30em;margin:0 0 32px}
+.lead b{color:var(--cr);font-weight:500}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:34px}
+.btn{appearance:none;border:0;border-radius:14px;min-height:54px;padding:12px 24px;font:600 16px/1.2 var(--sans);cursor:pointer;background:var(--am);color:#1a0f07;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;text-align:center;transition:transform .15s,box-shadow .2s,filter .15s;box-shadow:0 10px 30px -10px #ffb54a99,inset 0 1px 0 #ffffff55}
+.btn:hover{transform:translateY(-1px);box-shadow:0 16px 40px -12px #ffb54acc,inset 0 1px 0 #ffffff55}
+.btn:active{transform:translateY(0)}
+.btn.g{background:transparent;color:var(--cr);border:1px solid var(--line2);box-shadow:none}
+.btn.g:hover{border-color:var(--am);box-shadow:none}
+.btn:disabled{background:var(--card2);color:var(--dim2);cursor:not-allowed;box-shadow:none;transform:none}
+.btn.w{width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 12px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 11px;display:flex;gap:7px;align-items:center}
+.chip i{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ---- прибор */
+.stage{position:relative;perspective:1400px}
+.amb{position:absolute;inset:-14% -8%;z-index:0;pointer-events:none;filter:blur(60px) saturate(1.9) brightness(1.25);opacity:.85}
+.stage::before{content:"";position:absolute;inset:-20% -15%;z-index:0;pointer-events:none;background:radial-gradient(50% 50% at 50% 45%,#ff9a3d24,transparent 70%)}
+.amb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease}
+.amb img.on{opacity:1}
+.dev{position:relative;z-index:1;border-radius:26px;padding:20px 20px 20px;background:linear-gradient(160deg,#2c221b 0%,#17100b 55%,#100a07 100%);
+  box-shadow:0 1px 0 #ffffff14 inset,0 -1px 0 #00000080 inset,0 0 0 1px #00000099,0 40px 80px -30px #000,0 18px 40px -20px #000c;
+  transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.7,.2,1);will-change:transform}
+.dev::before{content:"";position:absolute;inset:6px;border-radius:21px;border:1px solid #ffffff0a;pointer-events:none}
+.btnhw{position:absolute;right:-4px;top:30%;width:5px;height:38px;border-radius:0 3px 3px 0;background:linear-gradient(90deg,#3a2c22,#241a13)}
+.scr{position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#000;box-shadow:0 0 0 2px #050302,0 0 0 3px #2a2018}
+.scr video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .38s ease;background:#000}
+.scr video.on{opacity:1}
+.glass{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,#ffffff1a 0%,#ffffff05 32%,transparent 33%,transparent 100%);mix-blend-mode:screen;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.tabs{position:relative;z-index:1;display:flex;justify-content:center;flex-wrap:wrap;gap:4px 6px;margin-top:26px}
+.tab{appearance:none;background:none;border:0;color:var(--dim2);font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:8px 8px 10px;cursor:pointer;position:relative}
+.tab:hover{color:var(--dim)}
+.tab.on{color:var(--cr)}
+.tab::after{content:"";position:absolute;left:8px;right:8px;bottom:2px;height:2px;border-radius:2px;background:var(--line)}
+.tab .bar{position:absolute;left:8px;bottom:2px;height:2px;width:0;border-radius:2px;background:var(--am);z-index:1}
+.tab.on .bar{animation:fill var(--dur,3.6s) linear forwards}
+.paused .tab.on .bar{animation:none;width:calc(100% - 16px)}
+@keyframes fill{to{width:calc(100% - 16px)}}
+.tab sup{color:var(--am);font-size:8px;margin-left:3px;letter-spacing:.06em}
+
+/* ---- секции */
+section{padding:56px 0}
+.kicker{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim2);margin:0 0 14px}
+h2{font:500 clamp(30px,3.6vw,42px)/1.1 var(--serif);letter-spacing:-.015em;margin:0 0 34px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+.step{position:relative;padding:22px 22px 24px;border-radius:18px;background:linear-gradient(180deg,var(--card),transparent);border:1px solid var(--line)}
+.step .n{font:700 13px var(--mono);color:var(--am);letter-spacing:.1em;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.step .n::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+.step p{margin:0;font-size:16px}
+.keep{margin-top:16px;color:var(--dim);font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.keep svg{flex:none;margin-top:2px;color:var(--gr)}
+.warn{background:#e5483b14;border:1px solid #e5483b55;border-radius:14px;padding:14px 16px;font-size:15px;margin-bottom:8px}
+
+/* ---- версии */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch}
+.plan{position:relative;border-radius:22px;padding:26px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column}
+.plan.pro{background:radial-gradient(120% 80% at 100% 0%,#ffb54a1c,transparent 60%),var(--card);border-color:#ffb54a55;box-shadow:0 30px 80px -40px #ffb54a55}
+.plan.pro::before{content:"";position:absolute;inset:-1px;border-radius:23px;padding:1px;background:linear-gradient(140deg,#ffb54aaa,transparent 40%,transparent 70%,#ff8a3d66);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.ph{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.tag{padding:3px 8px;border-radius:7px;background:var(--tl);color:#08181a;font:700 11px var(--mono);letter-spacing:.08em}
+.tag.p{background:var(--am);color:#1a0f07}
+.plan h3{font:500 28px/1.15 var(--serif);margin:0}
+.plan .d{color:var(--dim);margin:8px 0 20px;font-size:15px}
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:20px}
+.th{position:relative;aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:#000;box-shadow:0 0 0 1px #00000099,0 0 0 2px #2a2018}
+.th img{width:100%;height:100%;display:block}
+.th.off img{filter:grayscale(1) brightness(.35) blur(1px)}
+.th.off::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a8998a' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/14px no-repeat}
+.plan ul{list-style:none;margin:0 0 22px;padding:0;display:grid;gap:8px;font-size:15px}
+.plan li{display:flex;gap:10px;align-items:flex-start}
+.plan li::before{content:"";flex:none;width:16px;height:16px;margin-top:3px;border-radius:50%;background:#7cc47a22 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237cc47a' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/10px no-repeat}
+.plan.pro li::before{background-color:#ffb54a22;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffb54a' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E")}
+.grow{flex:1}
+.ver{display:flex;justify-content:space-between;align-items:baseline;color:var(--dim);font:500 13px var(--mono);margin-bottom:12px}
+.ver b{color:var(--cr);font-weight:700}
+.drop{display:block;border:1.5px dashed var(--line2);border-radius:14px;padding:16px 14px;text-align:center;color:var(--dim);cursor:pointer;margin-bottom:10px;transition:border-color .15s,background .15s;font-size:14px}
 .drop:hover,.drop.over{border-color:var(--am);background:#ffb54a0d}
-.drop b{display:block;color:var(--cr);font-size:16px;margin-bottom:2px;word-break:break-all}
-.drop.ok{border-style:solid;border-color:var(--gr)}
+.drop b{display:block;color:var(--cr);font-size:15px;font-weight:600;margin-bottom:1px;word-break:break-all}
+.drop.ok{border-style:solid;border-color:var(--gr);background:#7cc47a0d}
 .drop input{display:none}
 .msg{font-size:14px;margin-top:8px;min-height:20px}
 .er{color:var(--rd)}.ok{color:var(--gr)}
-.warn{background:#e5483b1a;border:1px solid #e5483b66;border-radius:12px;padding:12px 14px;color:var(--cr);font-size:15px}
-details{margin-top:4px}
-summary{cursor:pointer;color:var(--am);font-weight:600;padding:4px 0}
-code{background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:14px}
-.note{color:var(--dim);font-size:14px;margin-top:10px}
-footer{color:var(--dim);font-size:13px;text-align:center;margin-top:22px}
+.note{color:var(--dim);font-size:13px;margin:12px 0 0}
+code{font:500 12.5px var(--mono);background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+
+/* ---- помощь */
+.faq{display:grid;gap:10px;max-width:760px}
+details{border:1px solid var(--line);border-radius:16px;background:var(--card);transition:border-color .2s}
+details[open]{border-color:var(--line2)}
+summary{list-style:none;cursor:pointer;padding:18px 20px;font-weight:600;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";flex:none;width:12px;height:12px;background:linear-gradient(var(--am),var(--am)) center/12px 2px no-repeat,linear-gradient(var(--am),var(--am)) center/2px 12px no-repeat;transition:transform .25s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin:0;padding:0 20px 18px;color:var(--dim);font-size:15px}
+details p b{color:var(--cr)}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 40px;color:var(--dim2);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer a{color:var(--dim)}
-@media(max-width:400px){h1{font-size:19px}}
+
+/* ---- появление при прокрутке */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+.hero .rv:nth-child(2){transition-delay:.06s}.hero .rv:nth-child(3){transition-delay:.12s}.hero .rv:nth-child(4){transition-delay:.18s}.hero .rv:nth-child(5){transition-delay:.24s}
+
+@media(max-width:900px){
+  .hero{grid-template-columns:minmax(0,1fr);gap:34px;padding:16px 0 40px;min-height:0}
+  .hero .copy{order:2}.stage{order:1;margin:0 4px}
+  .steps,.plans{grid-template-columns:1fr}
+  section{padding:40px 0}
+}
+@media(max-width:520px){
+  .wrap{padding:0 16px}
+  .top{height:64px}.gh span{display:none}.gh{padding:0 10px}
+  .brand i{display:none}
+  .dev{padding:12px;border-radius:18px}.dev::before{inset:4px;border-radius:15px}
+  .tab{font-size:10px;letter-spacing:.08em;padding:8px 5px 10px}.tab::after,.tab .bar{left:5px}.tab::after{right:5px}
+  @keyframes fill{to{width:calc(100% - 10px)}}
+  .eyebrow{letter-spacing:.08em;font-size:11px}
+  .lead{font-size:17px}.cta{flex-direction:column}.cta .btn{width:100%}
+  .amb{inset:-8% 0}.stage::before{inset:-10% 0}
+  .tabs{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;margin:20px -16px 0;padding:0 12px;-webkit-mask:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent)}
+  .tabs::-webkit-scrollbar{display:none}.tab{flex:none}
+  .plan{padding:20px}
+}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.dev,.glass{transition:none}.eyebrow b{animation:none}}
 </style>
 </head>
 <body>
-<main>
-<header>
-  <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a120c" stroke-width="2.4" stroke-linecap="round"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h7"/></svg></div>
-  <div><h1 data-i="h1">Монитор воздуха — прошивка</h1><div class="sub" data-i="sub">ESP32-S3 · прямо из браузера, без Arduino</div></div>
+<div class="wrap">
+<header class="top">
+  <div class="mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a120c" stroke-width="2.6" stroke-linecap="round"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h7"/></svg></div>
+  <div class="brand" data-i="brand">Монитор воздуха <i>· ESP32-S3</i></div>
+  <div class="sp"></div>
+  <a class="gh" href="https://github.com/Trickster69/air-monitor" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg><span data-i="code">Исходники</span></a>
   <label class="lang" title="Язык · Language · Idioma"><svg class="gl" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.6 3.9 5.6 3.9 9.2s-1.3 6.6-3.9 9.2c-2.6-2.6-3.9-5.6-3.9-9.2s1.3-6.6 3.9-9.2z"/></svg><span id="langcur">RU</span><svg class="ch" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg><select id="langsel" aria-label="Язык · Language · Idioma"><option value="ru">Русский</option><option value="en">English</option><option value="es">Español</option></select></label>
 </header>
 
-<div class="warn" id="nows" hidden data-i="nows">Этот браузер не умеет работать с USB-портом. Откройте страницу в <b>Chrome</b> или <b>Edge</b> на компьютере.</div>
+<div class="hero">
+  <div class="copy">
+    <div class="eyebrow rv"><b></b><span><span data-i="eye">Открытая прошивка · версия</span> <span class="fv">…</span></span></div>
+    <h1 class="rv" data-i="h1">Воздух,<br>который <em>видно</em></h1>
+    <p class="lead rv" data-i="lead">Домашний монитор CO₂, пыли, VOC, температуры и влажности на цветном экране. Прошивка ставится <b>прямо с этой страницы</b> — по USB, за минуту, без Arduino.</p>
+    <div class="cta rv"><a class="btn" href="#install" data-i="cta1">Установить прошивку</a><a class="btn g" href="#pro" data-i="cta2">Что даёт PRO</a></div>
+    <div class="chips rv"><span class="chip" style="color:#e9a64a"><i></i>CO₂</span><span class="chip" style="color:#c9a1e8"><i></i>PM1 · 2.5 · 10</span><span class="chip" style="color:#4fb0b8"><i></i>VOC · NOx</span><span class="chip" style="color:#e88a6a"><i></i>°C</span><span class="chip" style="color:#7cb7e8"><i></i>%RH</span></div>
+  </div>
+  <div class="stage" id="stage">
+    <div class="amb" id="amb"></div>
+    <div class="dev" id="dev"><div class="btnhw"></div><div class="scr" id="scr"><div class="glass" id="glass"></div></div></div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+</div>
+</div>
 
-<section class="card">
-  <h2 data-i="how">Как это работает</h2>
-  <ol>
-    <li data-i="s1">Подключите прибор к компьютеру USB-кабелем.</li>
-    <li data-i="s2">Нажмите кнопку установки ниже и выберите порт в списке.</li>
-    <li data-i="s3">Подождите около минуты. Прибор перезагрузится сам.</li>
-  </ol>
-  <p class="note" style="margin:10px 0 0" data-i="keep">Настройки Wi-Fi и история сохраняются, если не отмечать «Erase device» (стереть всё).</p>
+<div class="wrap">
+<section id="install">
+  <div class="kicker rv" data-i="k1">Установка</div>
+  <h2 class="rv" data-i="how">Три шага, одна минута</h2>
+  <div class="warn" id="nows" hidden data-i="nows">Этот браузер не умеет работать с USB-портом. Откройте страницу в <b>Chrome</b> или <b>Edge</b> на компьютере.</div>
+  <div class="steps">
+    <div class="step rv"><div class="n">01</div><p data-i="s1">Подключите прибор к компьютеру USB-кабелем.</p></div>
+    <div class="step rv"><div class="n">02</div><p data-i="s2">Нажмите кнопку установки ниже и выберите порт в списке.</p></div>
+    <div class="step rv"><div class="n">03</div><p data-i="s3">Подождите около минуты. Прибор перезагрузится сам.</p></div>
+  </div>
+  <div class="keep rv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span data-i="keep">Настройки Wi-Fi и история сохраняются, если не отмечать «Erase device» (стереть всё).</span></div>
 </section>
 
-<section class="card">
-  <h2><span data-i="freeh">Бесплатная версия</span> <span class="tag f">FREE</span></h2>
-  <h3 data-i="freet">Экран «Показатели»</h3>
-  <p class="sub" data-i="freed">Все датчики на одном экране: CO₂, пыль PM2.5, VOC, NOx, температура и влажность. Страница настроек и обновление по Wi-Fi.</p>
-  <div class="ver"><span><span data-i="ver">Версия</span> <b id="fv">…</b></span><span id="fdate"></span></div>
-  <esp-web-install-button id="free" manifest="manifest.json">
-    <button slot="activate" class="btn" data-i="freeb">Установить бесплатную версию</button>
-    <span slot="unsupported"></span>
-    <span slot="not-allowed"><div class="warn" data-i="https">Страница должна быть открыта по https.</div></span>
-  </esp-web-install-button>
+<section id="pro" style="padding-top:8px">
+  <div class="plans">
+    <div class="plan rv">
+      <div class="ph"><span class="tag">FREE</span></div>
+      <h3 data-i="freeh">Бесплатная</h3>
+      <p class="d" data-i="freed">Все датчики на одном экране. Страница настроек и обновление по Wi-Fi.</p>
+      <div class="thumbs" data-plan="free"></div>
+      <ul><li data-i="f1">Экран «Показатели»: CO₂, пыль, VOC, NOx, температура, влажность</li><li data-i="f2">Настройка Wi-Fi по QR-коду</li><li data-i="f3">Обновления по воздуху</li></ul>
+      <div class="grow"></div>
+      <div class="ver"><span><span data-i="ver">Версия</span> <b class="fv">…</b></span><span id="fdate"></span></div>
+      <esp-web-install-button id="free" manifest="manifest.json">
+        <button slot="activate" class="btn w" data-i="freeb">Установить бесплатную версию</button>
+        <span slot="unsupported"></span>
+        <span slot="not-allowed"><div class="warn" data-i="https">Страница должна быть открыта по https.</div></span>
+      </esp-web-install-button>
+    </div>
+    <div class="plan pro rv">
+      <div class="ph"><span class="tag p">PRO</span></div>
+      <h3 data-i="proh">Все экраны</h3>
+      <p class="d" data-i="prod">Файл прошивки — у подписчиков на Бусти. Выберите его здесь и установите так же, по USB.</p>
+      <div class="thumbs" data-plan="pro"></div>
+      <ul><li data-i="p1">Перекидные часы и индекс воздуха</li><li data-i="p2">Графики за 12 часов по каждому датчику</li><li data-i="p3">Погода, курсы валют и акций</li><li data-i="p4">Уведомления в Telegram</li></ul>
+      <div class="grow"></div>
+      <label class="drop" id="drop">
+        <b id="dname" data-i="dname">Выберите или перетащите файл .bin</b>
+        <span id="dsub" data-i="dsub">файл PRO-прошивки с Бусти</span>
+        <input type="file" id="file" accept=".bin">
+      </label>
+      <esp-web-install-button id="pro">
+        <button slot="activate" class="btn w" id="probtn" disabled data-i="prob">Установить из файла</button>
+        <span slot="unsupported"></span>
+        <span slot="not-allowed"></span>
+      </esp-web-install-button>
+      <div class="msg" id="pmsg"></div>
+      <p class="note" data-i="ota">Этот же файл можно залить без компьютера: на странице настроек прибора (<code>http://air.local</code>), раздел «Прошивка».</p>
+    </div>
+  </div>
 </section>
 
-<section class="card">
-  <h2><span data-i="proh">PRO-версия</span> <span class="tag">PRO</span></h2>
-  <h3 data-i="prot">Все экраны</h3>
-  <p class="sub" data-i="prod">Перекидные часы, индекс воздуха, графики за 12 часов, погода, курсы валют и акций, уведомления в Telegram. Файл прошивки — у подписчиков на Бусти.</p>
-  <label class="drop" id="drop">
-    <b id="dname" data-i="dname">Выберите или перетащите файл .bin</b>
-    <span id="dsub" data-i="dsub">файл PRO-прошивки с Бусти</span>
-    <input type="file" id="file" accept=".bin">
-  </label>
-  <esp-web-install-button id="pro">
-    <button slot="activate" class="btn" id="probtn" disabled data-i="prob">Установить из файла</button>
-    <span slot="unsupported"></span>
-    <span slot="not-allowed"></span>
-  </esp-web-install-button>
-  <div class="msg" id="pmsg"></div>
-  <p class="note" data-i="ota">Этот же файл можно залить без компьютера: на странице настроек прибора (<code>http://air.local</code>), раздел «Прошивка».</p>
+<section>
+  <div class="kicker rv" data-i="k3">Помощь</div>
+  <h2 class="rv" data-i="help">Не получается?</h2>
+  <div class="faq">
+    <details class="rv"><summary data-i="q1">Порта нет в списке</summary><p data-i="a1">Кабель может быть только для зарядки — возьмите другой. Если порт так и не появился, установите драйвер <b>CP210x</b> или <b>CH340</b> (зависит от платы) и переподключите прибор.</p></details>
+    <details class="rv"><summary data-i="q2">Ошибка подключения или «Failed to initialize»</summary><p data-i="a2">Зажмите кнопку <b>BOOT</b> на плате, нажмите и отпустите <b>RESET</b> (или переподключите кабель), отпустите BOOT и попробуйте снова. Закройте Arduino IDE и другие программы, которые держат порт.</p></details>
+    <details class="rv"><summary data-i="q3">После установки экран пустой</summary><p data-i="a3">Нажмите RESET или переподключите питание. Если прибор новый, он сам откроет точку доступа <b>ESP32-TFT-AIR</b> с QR-кодом на экране — по нему настраивается Wi-Fi.</p></details>
+  </div>
 </section>
 
-<section class="card">
-  <h2 data-i="help">Не получается?</h2>
-  <details><summary data-i="q1">Порта нет в списке</summary>
-    <p class="note" style="color:var(--cr)" data-i="a1">Кабель может быть только для зарядки — возьмите другой. Если порт так и не появился, установите драйвер <b>CP210x</b> или <b>CH340</b> (зависит от платы) и переподключите прибор.</p></details>
-  <details><summary data-i="q2">Ошибка подключения или «Failed to initialize»</summary>
-    <p class="note" style="color:var(--cr)" data-i="a2">Зажмите кнопку <b>BOOT</b> на плате, нажмите и отпустите <b>RESET</b> (или переподключите кабель), отпустите BOOT и попробуйте снова. Закройте Arduino IDE и другие программы, которые держат порт.</p></details>
-  <details><summary data-i="q3">После установки экран пустой</summary>
-    <p class="note" style="color:var(--cr)" data-i="a3">Нажмите RESET или переподключите питание. Если прибор новый, он сам откроет точку доступа <b>ESP32-TFT-AIR</b> с QR-кодом на экране — по нему настраивается Wi-Fi.</p></details>
-</section>
-
-<footer data-i="foot">Прошивка ставится через <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a> · работает в Chrome и Edge на компьютере</footer>
-</main>
+<footer><span data-i="foot">Прошивка ставится через <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a> · работает в Chrome и Edge на компьютере</span><span>MIT · <a href="https://github.com/Trickster69/air-monitor" target="_blank" rel="noopener">GitHub</a></span></footer>
+</div>
 
 <script>
 const $=id=>document.getElementById(id);
 if(!("serial" in navigator))$("nows").hidden=false;
 
+// ---- экраны прибора: картинки из симулятора (gen/site_frames.py), подписи вкладок на трёх языках
+const SCREENS=[
+  {f:"flip",t:{ru:"Часы",en:"Clock",es:"Reloj"},pro:1},
+  {f:"dash_now",t:{ru:"Показатели",en:"Readings",es:"Mediciones"},pro:0},
+  {f:"air_now",t:{ru:"Индекс",en:"Index",es:"Índice"},pro:1},
+  {f:"chart_3",t:{ru:"Графики",en:"Charts",es:"Gráficos"},pro:1},
+  {f:"wx_clear",t:{ru:"Погода",en:"Weather",es:"Tiempo"},pro:1,also:"wx_rain"},
+  {f:"mkt",t:{ru:"Рынки",en:"Markets",es:"Mercados"},pro:1}];
+const FRAMES=[];SCREENS.forEach((s,i)=>{FRAMES.push({f:s.f,tab:i});if(s.also)FRAMES.push({f:s.also,tab:i})});
+const HOLD=4000;   // ролики экранов (sim/sim_site.cpp) — 4,2 с: появление экрана + живая анимация
+
 // ---- языки: русский текст лежит в разметке, английский и испанский — здесь; ключ — data-i
 const EWT='<a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a>';
 const TR={
-en:{title:"Air monitor — firmware",h1:"Air monitor — firmware",sub:"ESP32-S3 · right from the browser, no Arduino needed",
+en:{title:"Air monitor — firmware",brand:"Air monitor <i>· ESP32-S3</i>",code:"Source",eye:"Open firmware · version",
+ h1:"Air you<br>can <em>see</em>",lead:"A home monitor for CO₂, dust, VOC, temperature and humidity on a colour screen. Install the firmware <b>right from this page</b> — over USB, in a minute, no Arduino needed.",
+ cta1:"Install firmware",cta2:"What PRO adds",k1:"Install",how:"Three steps, one minute",
  nows:"This browser can’t talk to USB ports. Open this page in <b>Chrome</b> or <b>Edge</b> on a computer.",
- how:"How it works",s1:"Connect the device to your computer with a USB cable.",s2:"Click the install button below and pick the port from the list.",s3:"Wait about a minute. The device restarts by itself.",
+ s1:"Connect the device to your computer with a USB cable.",s2:"Click the install button below and pick the port from the list.",s3:"Wait about a minute. The device restarts by itself.",
  keep:"Wi-Fi settings and history are kept as long as you don’t tick “Erase device”.",
- freeh:"Free version",freet:"“Readings” screen",freed:"All sensors on one screen: CO₂, PM2.5 dust, VOC, NOx, temperature and humidity. Settings page and updates over Wi-Fi.",
+ freeh:"Free",freed:"All sensors on one screen. Settings page and updates over Wi-Fi.",
+ f1:"“Readings” screen: CO₂, dust, VOC, NOx, temperature, humidity",f2:"Wi-Fi setup by QR code",f3:"Over-the-air updates",
  ver:"Version",freeb:"Install the free version",https:"This page must be opened over https.",
- proh:"PRO version",prot:"All screens",prod:"Flip clock, air index, 12-hour charts, weather, currency and stock prices, Telegram alerts. The firmware file is available to Boosty subscribers.",
+ proh:"Every screen",prod:"The firmware file is available to Boosty subscribers. Choose it here and install the same way, over USB.",
+ p1:"Flip clock and air index",p2:"12-hour charts for every sensor",p3:"Weather, currency and stock prices",p4:"Telegram alerts",
  dname:"Choose or drop a .bin file",dsub:"PRO firmware file from Boosty",prob:"Install from file",
  ota:"You can also flash this file without a computer: on the device’s settings page (<code>http://air.local</code>), “Firmware” section.",
- help:"Not working?",q1:"The port isn’t in the list",a1:"The cable may be charge-only — try another one. If the port still doesn’t show up, install the <b>CP210x</b> or <b>CH340</b> driver (depends on the board) and reconnect the device.",
+ k3:"Help",help:"Not working?",q1:"The port isn’t in the list",a1:"The cable may be charge-only — try another one. If the port still doesn’t show up, install the <b>CP210x</b> or <b>CH340</b> driver (depends on the board) and reconnect the device.",
  q2:"Connection error or “Failed to initialize”",a2:"Hold the <b>BOOT</b> button on the board, press and release <b>RESET</b> (or reconnect the cable), release BOOT and try again. Close Arduino IDE and any other program that holds the port.",
  q3:"The screen is blank after installing",a3:"Press RESET or reconnect the power. A new device opens its own access point <b>ESP32-TFT-AIR</b> with a QR code on the screen — scan it to set up Wi-Fi.",
  foot:"Installed with "+EWT+" · works in Chrome and Edge on a computer",
  mBin:"The file must have a .bin extension",mNot:"This is not an ESP32 firmware file",mBig:"The file is larger than 6 MB — it won’t fit in the device",mMan:"manifest.json didn’t load — reload the page",
  mOk:"The file is fine. Click “Install from file”.",mb:"MB",mName:"Air monitor (from file)"},
-es:{title:"Monitor de aire — firmware",h1:"Monitor de aire — firmware",sub:"ESP32-S3 · desde el navegador, sin Arduino",
+es:{title:"Monitor de aire — firmware",brand:"Monitor de aire <i>· ESP32-S3</i>",code:"Código",eye:"Firmware abierto · versión",
+ h1:"El aire<br>que <em>se ve</em>",lead:"Un monitor de CO₂, polvo, VOC, temperatura y humedad para casa, con pantalla a color. El firmware se instala <b>desde esta misma página</b>: por USB, en un minuto, sin Arduino.",
+ cta1:"Instalar firmware",cta2:"Qué añade PRO",k1:"Instalación",how:"Tres pasos, un minuto",
  nows:"Este navegador no puede usar puertos USB. Abre esta página en <b>Chrome</b> o <b>Edge</b> en un ordenador.",
- how:"Cómo funciona",s1:"Conecta el dispositivo al ordenador con un cable USB.",s2:"Pulsa el botón de instalación y elige el puerto de la lista.",s3:"Espera un minuto. El dispositivo se reinicia solo.",
+ s1:"Conecta el dispositivo al ordenador con un cable USB.",s2:"Pulsa el botón de instalación y elige el puerto de la lista.",s3:"Espera un minuto. El dispositivo se reinicia solo.",
  keep:"La configuración wifi y el historial se conservan si no marcas «Erase device» (borrar todo).",
- freeh:"Versión gratuita",freet:"Pantalla «Mediciones»",freed:"Todos los sensores en una pantalla: CO₂, polvo PM2.5, VOC, NOx, temperatura y humedad. Página de ajustes y actualizaciones por wifi.",
+ freeh:"Gratuita",freed:"Todos los sensores en una pantalla. Página de ajustes y actualizaciones por wifi.",
+ f1:"Pantalla «Mediciones»: CO₂, polvo, VOC, NOx, temperatura, humedad",f2:"Configuración wifi con código QR",f3:"Actualizaciones por wifi",
  ver:"Versión",freeb:"Instalar la versión gratuita",https:"La página debe abrirse por https.",
- proh:"Versión PRO",prot:"Todas las pantallas",prod:"Reloj de cartas, índice del aire, gráficos de 12 horas, tiempo, cotizaciones de divisas y bolsa, avisos por Telegram. El archivo del firmware está disponible para los suscriptores de Boosty.",
+ proh:"Todas las pantallas",prod:"El archivo del firmware está disponible para los suscriptores de Boosty. Elígelo aquí e instálalo igual, por USB.",
+ p1:"Reloj de cartas e índice del aire",p2:"Gráficos de 12 horas de cada sensor",p3:"Tiempo, divisas y bolsa",p4:"Avisos por Telegram",
  dname:"Elige o arrastra un archivo .bin",dsub:"archivo del firmware PRO de Boosty",prob:"Instalar desde archivo",
  ota:"También puedes instalar este archivo sin ordenador: en la página de ajustes del dispositivo (<code>http://air.local</code>), sección «Firmware».",
- help:"¿No funciona?",q1:"El puerto no aparece en la lista",a1:"Puede que el cable sea solo de carga: prueba con otro. Si el puerto sigue sin aparecer, instala el controlador <b>CP210x</b> o <b>CH340</b> (según la placa) y vuelve a conectar el dispositivo.",
+ k3:"Ayuda",help:"¿No funciona?",q1:"El puerto no aparece en la lista",a1:"Puede que el cable sea solo de carga: prueba con otro. Si el puerto sigue sin aparecer, instala el controlador <b>CP210x</b> o <b>CH340</b> (según la placa) y vuelve a conectar el dispositivo.",
  q2:"Error de conexión o «Failed to initialize»",a2:"Mantén pulsado <b>BOOT</b> en la placa, pulsa y suelta <b>RESET</b> (o reconecta el cable), suelta BOOT e inténtalo de nuevo. Cierra Arduino IDE y otros programas que usen el puerto.",
  q3:"La pantalla queda en blanco tras instalar",a3:"Pulsa RESET o reconecta la alimentación. Un dispositivo nuevo abre su propio punto de acceso <b>ESP32-TFT-AIR</b> con un código QR en la pantalla: escanéalo para configurar el wifi.",
  foot:"Se instala con "+EWT+" · funciona en Chrome y Edge en un ordenador",
@@ -165,23 +331,65 @@ function pickLang(){
 }
 let LANG=pickLang();
 const t=k=>(TR[LANG]&&TR[LANG][k])||TR.ru[k]||RU[k]||k;
-let fileState=null;   // что показать в поле файла и сообщении после смены языка
+const src=f=>`img/${LANG}/${f}.webp`, vsrc=f=>`vid/${LANG}/${f}.mp4`;
+let fileState=null,lastMsg=null;
+
+// ---- витрина: экран в корпусе, свечение из той же картинки, вкладки с полосой времени
+const scr=$("scr"),amb=$("amb"),tabs=$("tabs"),dev=$("dev"),glass=$("glass"),stage=$("stage");
+const imgs=[],glows=[];
+FRAMES.forEach(fr=>{const a=document.createElement("video");a.muted=true;a.playsInline=true;a.preload="auto";a.disablePictureInPicture=true;a.setAttribute("muted","");a.setAttribute("playsinline","");scr.insertBefore(a,glass);imgs.push(a);
+  const g=new Image();g.alt="";g.setAttribute("aria-hidden","true");amb.appendChild(g);glows.push(g)});
+SCREENS.forEach((s,i)=>{const b=document.createElement("button");b.className="tab";b.type="button";b.innerHTML=`<span></span><i class="bar"></i>`;
+  b.onclick=()=>{show(FRAMES.findIndex(f=>f.tab==i),true)};tabs.appendChild(b)});
+let cur=-1,timer=null,paused=false;
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function show(i,manual){
+  if(i==cur)return;cur=i;
+  imgs.forEach((v,k)=>{v.classList.toggle("on",k==i);if(k==i&&!REDUCED){try{v.currentTime=0}catch(_){}v.play().catch(()=>{})}});glows.forEach((im,k)=>im.classList.toggle("on",k==i));
+  [...tabs.children].forEach((b,k)=>{b.classList.remove("on");void b.offsetWidth;b.classList.toggle("on",k==FRAMES[i].tab)});
+  const ob=tabs.children[FRAMES[i].tab];if(tabs.scrollWidth>tabs.clientWidth)tabs.scrollTo({left:ob.offsetLeft-(tabs.clientWidth-ob.offsetWidth)/2,behavior:"smooth"});
+  const n=FRAMES.filter(f=>f.tab==FRAMES[i].tab).length;tabs.style.setProperty("--dur",HOLD*n/1000+"s");
+  clearTimeout(timer);
+  if(manual){paused=false;tabs.classList.remove("paused")}
+  if(!paused&&!REDUCED)timer=setTimeout(()=>show((cur+1)%FRAMES.length),HOLD);
+}
+if(REDUCED)tabs.classList.add("paused");
+// наклон за мышью — корпус и блик стекла
+if(!REDUCED&&matchMedia("(hover: hover)").matches){
+  stage.addEventListener("pointermove",e=>{const r=stage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    dev.style.transform=`rotateY(${x*12}deg) rotateX(${-y*9}deg)`;glass.style.transform=`translate(${x*-30}px,${y*-20}px)`});
+  stage.addEventListener("pointerleave",()=>{dev.style.transform="";glass.style.transform=""});
+}
+// миниатюры в карточках версий
+function thumbs(){document.querySelectorAll(".thumbs").forEach(box=>{const free=box.dataset.plan=="free";box.innerHTML="";
+  SCREENS.forEach(s=>{const d=document.createElement("div");d.className="th"+(free&&s.pro?" off":"");d.title=s.t[LANG];
+    const im=new Image();im.src=src(s.f);im.alt=s.t[LANG];im.loading="lazy";d.appendChild(im);box.appendChild(d)})})}
+
 function apply(){
   document.documentElement.lang=LANG;
   document.querySelectorAll("[data-i]").forEach(e=>{const k=e.dataset.i;e.innerHTML=LANG=="ru"?RU[k]:(TR[LANG][k]||RU[k])});
   document.title=LANG=="ru"?RU.title:TR[LANG].title;
   $("langsel").value=LANG;$("langcur").textContent=LCODE[LANG];
+  FRAMES.forEach((fr,k)=>{imgs[k].poster=src(fr.f);imgs[k].src=vsrc(fr.f);glows[k].src=src(fr.f)});
+  if(cur>=0&&!REDUCED)imgs[cur].play().catch(()=>{});
+  [...tabs.children].forEach((b,k)=>b.firstChild.textContent=SCREENS[k].t[LANG]);
+  imgs.forEach((v,k)=>v.setAttribute("aria-label",SCREENS[FRAMES[k].tab].t[LANG]));
+  thumbs();
   if(fileState){$("dname").textContent=fileState.name;$("dsub").textContent=fileState.size()}
   if(lastMsg)setMsg(lastMsg[0],lastMsg[1]);
 }
 $("langsel").onchange=e=>{LANG=e.target.value;try{localStorage.setItem("lang",LANG)}catch(_){}apply()};
 
-// версия бесплатной прошивки — из манифеста
-let MAN=null;
-fetch("manifest.json",{cache:"no-store"}).then(r=>r.json()).then(m=>{MAN=m;$("fv").textContent=m.version;if(m.date)$("fdate").textContent=m.date}).catch(()=>{$("fv").textContent="—"});
+// ---- появление блоков при прокрутке
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{rootMargin:"0px 0px -8% 0px"});
+document.querySelectorAll(".rv").forEach(e=>io.observe(e));
 
-// PRO: свой файл. Загрузчик, разметка и boot_app0 — с этого сайта (те же, что у бесплатной), прошивка — из файла
-let blobUrl=null,manUrl=null,lastMsg=null;
+// ---- версия бесплатной прошивки — из манифеста
+let MAN=null;
+fetch("manifest.json",{cache:"no-store"}).then(r=>r.json()).then(m=>{MAN=m;document.querySelectorAll(".fv").forEach(e=>e.textContent=m.version);if(m.date)$("fdate").textContent=m.date}).catch(()=>{document.querySelectorAll(".fv").forEach(e=>e.textContent="—")});
+
+// ---- PRO: свой файл. Загрузчик, разметка и boot_app0 — с этого сайта (те же, что у бесплатной), прошивка — из файла
+let blobUrl=null,manUrl=null;
 function setMsg(k,c){lastMsg=k?[k,c]:null;$("pmsg").textContent=k?t(k):"";$("pmsg").className="msg "+(c||"")}
 async function take(f){
   $("probtn").disabled=true;$("drop").classList.remove("ok");
@@ -209,7 +417,8 @@ const d=$("drop");
 ["dragenter","dragover"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.add("over")}));
 ["dragleave","drop"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.remove("over")}));
 d.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)take(f)});
-apply();
+
+apply();show(0);
 </script>
 </body>
 </html>
