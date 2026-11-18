@@ -266,8 +266,8 @@ static bool footerUpdate() {             // true — надписи вокруг
     else if (i == 1) snprintf(c.val, sizeof c.val, "%d%%", (int)lroundf(v));
     else snprintf(c.val, sizeof c.val, "%d", (int)lroundf(v));
   }
-  { const air::Score sc = air::scoreOf(live.v, live.ok); footScore = sc.score;
-    footScol = sc.score >= 70 ? cvs::hex(0x4FB0B8) : sc.score >= 40 ? cvs::hex(0xFFB54A) : cvs::hex(0xE5483B); }
+  { float iv[air::NK]; air::indexValues(live, iv); const air::Score sc = air::scoreOf(iv, live.ok); footScore = sc.score;   // PM2.5 — среднее за 10 мин
+    footScol = sc.score >= 75 ? cvs::hex(0x4FB0B8) : sc.score >= 50 ? cvs::hex(0xFFB54A) : cvs::hex(0xE5483B); }   // те же границы, что шкала «Индекса»
   char k[160]; int n = snprintf(k, sizeof k, "%s|%s|%d|%d", footDate, footOut, footIcon, footScore);
   for (int i = 0; i < 5 && n < (int)sizeof k - 20; i++) n += snprintf(k + n, sizeof k - n, "|%s%d%d%d", footCell[i].val, footCell[i].ok, (int)footCell[i].col.r, footCell[i].tr);
   if (!strcmp(k, footKey)) return false;
@@ -377,7 +377,7 @@ static void enter(Screen s) {
     case SCR_PORTAL: drawPortal(); break;
 #if AIR_PRO
     case SCR_FLIP: if (fade) { flipDim = !clk.ok; flip::dim = flipDim; flipMin = clk.ok ? clk.hh * 60 + clk.mm : 0; footerUpdate(); xfFlip = true; } else enterFlip(); break;
-    case SCR_AIR: air::setLive(live.v, live.ok); air::begin(now); break;
+    case SCR_AIR: { float iv[air::NK]; air::indexValues(live, iv); air::setLive(iv, live.ok); } air::begin(now); break;
     case SCR_CHARTS:
       // данные свежее минуты — готовые кадры годятся; иначе берём новые сразу (первый кадр считается до начала перехода)
       charts::begin(now);
@@ -449,7 +449,7 @@ void setup() {
   cvs::ensureBufs();
   xfPrev = (uint8_t*)GX_ALLOC(gx::W * gx::H * 3);
 #if AIR_PRO
-  air::buildRing();                              // таблицы экрана «Индекс» — заранее, чтобы первый вход не тормозил
+  air::prebuild();                              // шкала экрана «Индекс» — заранее, чтобы первый вход не тормозил
 #endif
   cvs::initPhi();
   dash::begin(0); dash::frame(0, 0);             // и фон экрана показателей (кадр на экран не отправляется)
@@ -594,7 +594,7 @@ void loop() {
       if (!drew) delay(20);
     } break;
     case SCR_AIR:
-      air::setLive(live.v, live.ok); hhmm(air::hhmm); hdate(air::date);
+      { float iv[air::NK]; air::indexValues(live, iv); air::setLive(iv, live.ok); } hhmm(air::hhmm); hdate(air::date);
       air::step((float)ms, dt); air::frame((float)t, (float)ms); xfBlend((float)ms); presentAll();
       break;
     case SCR_CHARTS:

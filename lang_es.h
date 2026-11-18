@@ -23,6 +23,22 @@ inline const char* const LANG_ES_TABLE[][2] = {
   {"too humid", "muy húmedo"}, {"a bit humid", "algo húmedo"}, {"too dry", "muy seco"}, {"a bit dry", "algo seco"},
   {"very dusty", "mucho polvo"}, {"a bit dusty", "algo de polvo"}, {"air is stuffy", "aire cargado"}, {"time to air out", "hora de ventilar"},
   {"AIR INDEX", "ÍNDICE DEL AIRE"}, {"weak spot: %s", "punto débil: %s"},
+  // индекс v2: стрелочный прибор, заголовок и подсказка
+  {"No data", "Sin datos"}, {"sensors warming up", "sensores calentando"}, {"Breathe easy", "Se respira bien"}, {"Air is good", "Aire bueno"},
+  {"CO₂ sensor warming up", "sensor de CO₂ calentando"}, {"all six readings are fine", "los seis valores, bien"}, {"all fine", "todo bien"},
+  {"Uncomfortable", "Incómodo"}, {"Air is heavy", "Aire cargado"}, {"So-so", "Regular"},
+  {"stuffy and dusty — air out briefly", "cargado y con polvo — ventila poco"}, {"CO₂ is high — open a window", "CO₂ alto — abre la ventana"},
+  {"CO₂ is rising — time to air out", "CO₂ subiendo — hora de ventilar"}, {"lots of VOCs — air out", "muchos COV — ventila"},
+  {"odours building up — air out", "se acumulan olores — ventila"}, {"NOx is high — check the stove", "NOx alto — revisa la cocina"},
+  {"NOx is up — gas or traffic", "NOx sube — gas o tráfico"}, {"very dusty — close the windows", "mucho polvo — cierra ventanas"},
+  {"hot — turn the heating down", "calor — baja la calefacción"}, {"cold — close the window", "frío — cierra la ventana"},
+  {"very humid — air out", "muy húmedo — ventila"}, {"a bit humid — air out", "algo húmedo — ventila"}, {"very dry — use a humidifier", "muy seco — usa humidificador"},
+  {"poor", "malo"}, {"great", "excelente"}, {"HUM", "HUM"},
+  {"Air index: %d/100 — %s, %s\n", "Índice del aire: %d/100 — %s, %s\n"},
+  // графики v2
+  {"steady for an hour", "sin cambios en 1 h"}, {"%s %s%s in an hour", "%s %s%s en 1 h"}, {"· 12 h", "· 12 h"},
+  // рынки v3
+  {"7 d", "7 d"}, {"30 d", "30 d"}, {"1 y", "1 a"}, {"6 months", "6 meses"}, {"6 MO", "6 MESES"},
   {"temperature", "temperatura"}, {"humidity", "humedad"},
   // графики
   {"12 H", "12 H"}, {"no change in 1 h  ·  min %s  max %s", "sin cambios en 1 h  ·  mín %s  máx %s"},

@@ -13,6 +13,7 @@ enum { M_T, M_H, M_CO2, M_VOC, M_NOX, M_PM1, M_PM25, M_PM10, M_N };
 struct Live {            // текущие показания; ok=false — датчик молчит, на экране прочерк
   float v[M_N];
   bool ok[M_N];
+  float pm10m = -1;       // PM2.5 — среднее за последние 10 минут (для индекса воздуха); −1 — ещё нет
 };
 
 struct Clock { bool ok; int hh, mm, wday, mday, mon; };   // wday 0 — воскресенье, mon 0..11

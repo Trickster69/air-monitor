@@ -131,6 +131,11 @@ inline void task(void*) {
     const bool ok4[4] = {thOk, ever[1] && now - last[1] < STALE_SGP, ever[2] && now - last[2] < STALE_CO2, ever[3] && now - last[3] < STALE_PMS};
     static const uint8_t src[app::M_N] = {0, 0, 2, 1, 1, 3, 3, 3};
     for (int m = 0; m < app::M_N; m++) { l.v[m] = v[m]; l.ok[m] = ok4[src[m]]; }
+    {   // PM2.5 для индекса — среднее за 10 минут (нормы по пыли — средние, короткий всплеск не роняет индекс сразу)
+      static float ring[600]; static int rn = 0, ri = 0; static double rsum = 0;
+      if (l.ok[app::M_PM25]) { if (rn == 600) rsum -= ring[ri]; else rn++; ring[ri] = l.v[app::M_PM25]; rsum += ring[ri]; ri = (ri + 1) % 600; }
+      l.pm10m = rn ? (float)(rsum / rn) : -1;
+    }
 
     {
       Lock lk;

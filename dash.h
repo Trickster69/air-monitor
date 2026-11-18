@@ -15,7 +15,7 @@ inline const Mt MT[NK] = {
   {"ТЕМП.", nullptr, "°C", true, 19, 25, 16, 28, 14, 32, "TEMP", "°C"}, {"ВЛАЖН.", nullptr, "%", false, 40, 60, 30, 70, 0, 100, "HUMIDITY", "%"},
   {"CO₂", nullptr, "ppm", false, NI, 800, NI, 1200, 400, 2000, "CO₂", "ppm"}, {"VOC", "SGP41", "индекс", false, NI, 150, NI, 250, 0, 500, "VOC", "index"},
   {"NOx", "SGP41", "индекс", false, NI, 20, NI, 150, 0, 300, "NOx", "index"}, {"PM1", nullptr, nullptr, false, NI, 10, NI, 25, 0, 60, "PM1", nullptr},
-  {"PM2.5", nullptr, nullptr, false, NI, 12, NI, 35, 0, 75, "PM2.5", nullptr}, {"PM10", nullptr, nullptr, false, NI, 45, NI, 100, 0, 150, "PM10", nullptr}};
+  {"PM2.5", nullptr, nullptr, false, NI, 9, NI, 35.4f, 0, 75, "PM2.5", nullptr}, {"PM10", nullptr, nullptr, false, NI, 45, NI, 100, 0, 150, "PM10", nullptr}};
 inline const char* lab(int k) { return L(MT[k].lab, MT[k].labEn); }
 inline const char* unit(int k) { return L(MT[k].u, MT[k].uEn); }
 // сценарии для проверки на ПК: норма / сейчас / готовка
