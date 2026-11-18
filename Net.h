@@ -122,14 +122,14 @@ inline bool fetchWeather() {
   char url[520];   // часовой пояс Open-Meteo определяет сам по координатам (timezone=auto)
   snprintf(url, sizeof url,
            "http://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f"
-           "&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,wind_direction_10m,is_day"
-           "&hourly=temperature_2m,precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset"
+           "&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,wind_direction_10m,is_day,cloud_cover,wind_gusts_10m"
+           "&hourly=temperature_2m,precipitation_probability,uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset"
            "&wind_speed_unit=ms&timezone=auto&forecast_days=2", cfg.lat, cfg.lon);
   JsonDocument filter(&psAlloc), doc(&psAlloc);
   filter["utc_offset_seconds"] = true; filter["current"] = true;
   filter["hourly"]["temperature_2m"] = true; filter["hourly"]["precipitation_probability"] = true;
   filter["daily"]["temperature_2m_max"] = true; filter["daily"]["temperature_2m_min"] = true;
-  filter["hourly"]["uv_index"] = true; filter["daily"]["sunrise"] = true; filter["daily"]["sunset"] = true;
+  filter["hourly"]["uv_index"] = true; filter["hourly"]["visibility"] = true; filter["daily"]["sunrise"] = true; filter["daily"]["sunset"] = true;
   bool ok = getJson(url, false, doc, filter);
   if (!ok) { memmove(url + 5, url + 4, strlen(url + 4) + 1); url[4] = 's'; doc.clear(); ok = getJson(url, true, doc, filter); }   // запасной путь — https
   if (!ok) return false;
@@ -151,6 +151,8 @@ inline bool fetchWeather() {
     w.pr[i] = hp[hour + i] | 0;
   }
   { JsonVariant u = doc["hourly"]["uv_index"][hour]; w.uv = u.isNull() ? -1.f : u.as<float>(); }
+  { JsonVariant c = cur["cloud_cover"], g = cur["wind_gusts_10m"], v = doc["hourly"]["visibility"][hour];   // живое небо
+    w.cloud = c.isNull() ? -1 : c.as<int>(); w.gust = g.isNull() ? -1.f : g.as<float>(); w.vis = v.isNull() ? -1.f : v.as<float>(); }
   auto hm = [](const char* s) { return (s && strlen(s) >= 16) ? atoi(s + 11) * 60 + atoi(s + 14) : -1; };   // "2026-11-16T07:42"
   w.sunrise = hm(doc["daily"]["sunrise"][0] | ""); w.sunset = hm(doc["daily"]["sunset"][0] | "");
   const int32_t off = doc["utc_offset_seconds"] | cfg.utcOff;

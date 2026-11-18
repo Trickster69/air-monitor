@@ -27,6 +27,7 @@ struct Wx {              // погода с Open-Meteo
   bool day;
   float hr[7]; int pr[7]; int hour0;   // 7 часов вперёд: температура, вероятность осадков, первый час
   float uv; int sunrise, sunset;        // УФ-индекс сейчас (−1 — нет); рассвет и закат, минуты от полуночи (−1 — нет)
+  int cloud; float gust, vis;           // облачность %, порывы м/с, видимость м (−1 — нет) — для живого неба
 };
 
 constexpr int SPARK_N = 26;
@@ -162,5 +163,16 @@ inline const char* MONTH_RU[12] = {"ЯНВ", "ФЕВ", "МАР", "АПР", "МА
 inline const char* MONTH_EN[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 inline const char* MONTH_ES[12] = {"ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"};
 inline const char* month(int i) { return en() ? MONTH_EN[i] : es() ? MONTH_ES[i] : MONTH_RU[i]; }
+// дата словами для часов: wd «Понедельник» / «Monday» / «Lunes», dm «16 ноября» / «November 16» / «16 de noviembre»
+inline const char* WDAYL_RU[7] = {"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"};
+inline const char* WDAYL_EN[7] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+inline const char* WDAYL_ES[7] = {"Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"};
+inline const char* MONTHG_RU[12] = {"января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"};
+inline const char* MONTHG_EN[12] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+inline const char* MONTHG_ES[12] = {"enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"};
+inline void dateLong(int wday, int mday, int mon, char* wd, int wn, char* dm, int dn) {
+  snprintf(wd, wn, "%s", en() ? WDAYL_EN[wday] : es() ? WDAYL_ES[wday] : WDAYL_RU[wday]);
+  if (en()) snprintf(dm, dn, "%s %d", MONTHG_EN[mon], mday); else if (es()) snprintf(dm, dn, "%d de %s", mday, MONTHG_ES[mon]); else snprintf(dm, dn, "%d %s", mday, MONTHG_RU[mon]);
+}
 
 }  // namespace app

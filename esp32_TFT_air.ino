@@ -188,7 +188,12 @@ static void netTask(void*) {
         if (net::fetchAsset(net::mkNext)) net::mkAnyOk = true;
         if (++net::mkNext >= app::ASSET_N) { net::mkEver = true; Lock lk; G.mkFresh = net::mkAnyOk; if (net::mkAnyOk) G.mkAtMs = millis() | 1; G.mkSeq++; }
       }
+      // замер «m» из порта: сколько внутренней памяти держит открытое соединение бота (задача сети — хозяин tg, без гонок)
+      static uint32_t probeAt = 0;
+      auto memLine = [](const char* what) { Serial.printf("[память] %s: внутренней %u КБ, кусок %u КБ\n", what, (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024), (unsigned)(heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) / 1024)); };
+      if (gMemProbe) { gMemProbe = false; memLine("бот подключён"); tg::drop(); memLine("бот отключён"); probeAt = millis() | 1; }
       tg::tick();
+      if (probeAt && millis() - probeAt > 10000) { probeAt = 0; memLine("бот снова подключён"); }
     }
 #endif
 
@@ -223,8 +228,9 @@ static void hdate(char* o) { if (clk.ok) snprintf(o, 40, "%s · %d %s", app::wda
 
 #if AIR_PRO   // ---- всё, что нужно экранам PRO ----
 static uint32_t seenWx = 0xFFFFFFFF, seenMk = 0xFFFFFFFF, chartsAt = 0;
-static char footDate[40] = "", footOut[40] = "", footKey[160] = ""; static flip::Cell footCell[5];
-static int flipMin = -1; static bool flipDim = false;
+static char footWd[24] = "", footDm[32] = "", footOut[40] = "", footKey[200] = ""; static const char* footWord = ""; static flip::Cell footCell[5];
+static int flipMin = -1; static bool flipDim = false, flipSpun = false;
+static double spinT0 = -1; static int spinFr = 0; static int64_t spinDrawUs = 0, spinSendUs = 0;   // замер разгона: начало и сколько кадров показано   // flipSpun — разгон карточек уже запущен на этом входе
 
 // Стрелки «растёт / падает»: значения каждые 30 с, сравнение с тем, что было 10 минут назад (после включения — с самым старым)
 static const int TR_K[5] = {app::M_T, app::M_H, app::M_CO2, app::M_VOC, app::M_PM25};
@@ -251,14 +257,17 @@ static int wxIconOf(int code, bool day) {
   if ((code >= 71 && code <= 77) || code == 85 || code == 86) return 6;
   return 5;
 }
+// улица для советов «Индекса» и Telegram: погода не старше 2 часов, иначе совет без улицы
+static void airOutdoor() { app::Wx w; { Lock lk; w = G.wx; } air::setOutdoor(w.ok && millis() - w.atMs < 2UL * 3600000UL, w.temp, (float)w.hum); }
 static int footIcon = -1, footScore = -1; static cvs::Col footScol;
 static bool footerUpdate() {             // true — надписи вокруг часов изменились
-  if (clk.ok) snprintf(footDate, sizeof footDate, "%s  ·  %d %s", app::wday(clk.wday), clk.mday, app::month(clk.mon)); else strcpy(footDate, L("ЖДУ ВРЕМЯ ПО WI-FI", "WAITING FOR TIME · WI-FI"));
+  if (clk.ok) app::dateLong(clk.wday, clk.mday, clk.mon, footWd, sizeof footWd, footDm, sizeof footDm);   // «Понедельник, 16 ноября»
+  else { snprintf(footWd, sizeof footWd, "%s", L("Жду время по Wi-Fi", "Waiting for time over Wi-Fi")); footDm[0] = 0; }
   { app::Wx w; { Lock lk; w = G.wx; }      // улица: «21° ясно» (если погода свежее 3 часов)
-    if (w.ok && millis() - w.atMs < 3UL * 3600000UL) { const int t = (int)lroundf(w.temp); snprintf(footOut, sizeof footOut, "%s%d°  %s", t < 0 ? "−" : "", abs(t), app::wxDesc(w.code)); footIcon = wxIconOf(w.code, w.day); }
+    if (w.ok && millis() - w.atMs < 3UL * 3600000UL) { const int t = (int)lroundf(w.temp); snprintf(footOut, sizeof footOut, "%s%d° %s", t < 0 ? "−" : "", abs(t), app::wxDesc(w.code)); footIcon = wxIconOf(w.code, w.day); }
     else { footOut[0] = 0; footIcon = -1; } }
   static const int mi[5] = {0, 1, 2, 3, 5};   // строки air::M: температура, влажность, CO₂, VOC, PM2.5
-  const char* lab[5] = {L("ТЕМП.", "TEMP"), L("ВЛАГА", "HUMID"), "CO₂", "VOC", "PM2.5"};
+  const char* lab[5] = {L("темп.", "temp."), L("влага", "humidity"), "CO₂", "VOC", "PM2.5"};
   for (int i = 0; i < 5; i++) {
     const air::Metric& m = air::M[mi[i]]; flip::Cell& c = footCell[i]; const float v = live.v[m.k];
     c.lab = lab[i]; c.ok = live.ok[m.k]; c.col = air::col(m, v); c.tr = trendOf(i);
@@ -267,14 +276,15 @@ static bool footerUpdate() {             // true — надписи вокруг
     else snprintf(c.val, sizeof c.val, "%d", (int)lroundf(v));
   }
   { float iv[air::NK]; air::indexValues(live, iv); const air::Score sc = air::scoreOf(iv, live.ok); footScore = sc.score;   // PM2.5 — среднее за 10 мин
-    footScol = sc.score >= 75 ? cvs::hex(0x4FB0B8) : sc.score >= 50 ? cvs::hex(0xFFB54A) : cvs::hex(0xE5483B); }   // те же границы, что шкала «Индекса»
-  char k[160]; int n = snprintf(k, sizeof k, "%s|%s|%d|%d", footDate, footOut, footIcon, footScore);
+    footScol = sc.score >= 75 ? cvs::hex(0x4FB0B8) : sc.score >= 50 ? cvs::hex(0xFFB54A) : cvs::hex(0xE5483B);
+    footWord = sc.score < 0 ? "" : sc.score >= 75 ? L("свежо", "fresh") : sc.score >= 50 ? L("пора проветрить", "time to air out") : L("душно", "stuffy"); }   // те же границы, что шкала «Индекса»
+  char k[160]; int n = snprintf(k, sizeof k, "%s|%s|%s|%d|%d", footWd, footDm, footOut, footIcon, footScore);
   for (int i = 0; i < 5 && n < (int)sizeof k - 20; i++) n += snprintf(k + n, sizeof k - n, "|%s%d%d%d", footCell[i].val, footCell[i].ok, (int)footCell[i].col.r, footCell[i].tr);
   if (!strcmp(k, footKey)) return false;
   strcpy(footKey, k);
   return true;
 }
-static void footerDraw() { flip::info(footDate, footOut, footIcon, footCell, 5, footScore, footScol); }
+static void footerDraw() { flip::info(footWd, footDm, footOut, footIcon, footCell, 5, footScore, footScol, footWord); }
 static int wxSceneOf(const app::Wx& w) {  // сцена по коду погоды, дню/ночи и близости рассвета или заката
   bool dusk = false;
   if (clk.ok && w.sunrise >= 0 && w.sunset >= 0) { const int m = clk.hh * 60 + clk.mm; dusk = abs(m - w.sunrise) <= 40 || abs(m - w.sunset) <= 40; }
@@ -283,7 +293,7 @@ static int wxSceneOf(const app::Wx& w) {  // сцена по коду погод
 static void enterFlip() {
   screen = SCR_FLIP;
   flipDim = !clk.ok; flip::dim = flipDim; flipMin = clk.ok ? clk.hh * 60 + clk.mm : 0;
-  flip::begin(flipMin, (float)nowMs());
+  flip::beginSpin(flipMin, (float)nowMs()); spinT0 = nowMs(); spinFr = 0;   // карточки разгоняются до текущего времени
   footerUpdate(); footerDraw();
   presentAll();
 }
@@ -298,16 +308,33 @@ static void chartsFeed() {               // история -> 25 точек на
   charts::pmSideOk = a && b;
 }
 static void chartsTime() { if (clk.ok) charts::setEnd(clk.hh, clk.mm); else charts::setEnd(-1, 0); }
+// строка после города на «Погоде»: живое время «— ПН 15:47» (раньше там стоял час прогноза и менялся только с новой погодой —
+// казалось, что время на экране стоит); погода старше 3 часов — «— 4 ч назад». Пересчитывается раз в минуту и при новой погоде.
+static void wxSubOf(const app::Wx& w, char* o, size_t n) {
+  const uint32_t ageMin = (millis() - w.atMs) / 60000;
+  if (w.ok && ageMin > 180) snprintf(o, n, L("— %lu ч назад", "— %lu h ago"), (unsigned long)(ageMin / 60));
+  else if (clk.ok) snprintf(o, n, "— %s %02d:%02d", app::wday(clk.wday), clk.hh, clk.mm);
+  else o[0] = 0;
+}
+// живое небо (18.11): восход/закат, время суток с секундами, ветер и порывы, код, облачность, видимость, фаза луны.
+// Нет погоды или времени — wx::riseM = −1, сцена как раньше (неподвижное солнце).
+static void wxLiveFeed() {
+  app::Wx w; { Lock lk; w = G.wx; }
+  if (!w.ok || !clk.ok || w.sunrise < 0 || w.sunset <= w.sunrise) { wx::riseM = -1; return; }
+  const time_t now = time(nullptr); struct tm lt; localtime_r(&now, &lt);
+  wx::riseM = w.sunrise; wx::setM = w.sunset; wx::nowM = lt.tm_hour * 60 + lt.tm_min + lt.tm_sec / 60.f;
+  wx::windMs = w.wind; wx::windFrom = (float)w.windDir; wx::code = w.code; wx::cloudPct = w.cloud; wx::gustMs = w.gust; wx::visM = w.vis;
+  const double days = (double)(now - 947182440) / 86400.0;   // от новолуния 6.01.2000 18:14 UTC, синодический месяц 29,530588 сут
+  double ph = fmod(days / 29.530588, 1.0); if (ph < 0) ph += 1; wx::moonPh = (float)ph;
+}
 static int wxFill() {                    // погода из общего хранилища -> надписи; возвращает нужную сцену
+  wxLiveFeed();
   app::Wx w; uint32_t seq; { Lock lk; w = G.wx; seq = G.wxSeq; }
   seenWx = seq;
   wx::Data& d = wx::D;
   if (!w.ok) { d.ok = false; strcpy(d.city, L("ПОГОДА", "WEATHER")); d.sub[0] = 0; strcpy(d.desc, L("нет данных — жду Wi-Fi", "no data — waiting for Wi-Fi")); return WS_CLOUDY; }
   d.ok = true; strlcpy(d.city, w.city, sizeof d.city);
-  const uint32_t ageMin = (millis() - w.atMs) / 60000;
-  if (ageMin > 180) snprintf(d.sub, sizeof d.sub, L("— %lu ч назад", "— %lu h ago"), (unsigned long)(ageMin / 60));
-  else if (clk.ok) snprintf(d.sub, sizeof d.sub, "— %s %02d:00", app::wday(clk.wday), w.hour0);
-  else d.sub[0] = 0;
+  wxSubOf(w, d.sub, sizeof d.sub);
   d.t = (int)lroundf(w.temp); d.feels = (int)lroundf(w.feels); d.hi = (int)lroundf(w.hi); d.lo = (int)lroundf(w.lo);
   d.wind = (int)lroundf(w.wind); d.hum = w.hum; d.wa = w.windDir; strlcpy(d.wd, app::windName(w.windDir), sizeof d.wd);
   strlcpy(d.desc, app::wxDesc(w.code), sizeof d.desc);
@@ -328,7 +355,7 @@ static void mkFill() {
   if (!wifi) strcpy(markets::note, L("нет сети", "offline"));
   else if (!at) strcpy(markets::note, fresh ? "" : L("загружаю…", "loading…"));
   else { const uint32_t m = (millis() - at) / 60000; if (m < 1) strcpy(markets::note, L("только что", "just now")); else snprintf(markets::note, sizeof markets::note, L("%lu мин назад", "%lu min ago"), (unsigned long)m); }
-  if (seq != drawnSeq) { drawnSeq = seq; markets::dataChanged(); }   // новые котировки — пересобрать карточки
+  if (seq != drawnSeq) { drawnSeq = seq; markets::dataChanged(); markets::quote((float)nowMs()); }   // новые котировки — пересобрать, цена прокручивается барабанами
   else markets::timeChanged();                                        // иначе поменялась только подпись в шапке
 }
 // ---- сцена погоды собирается фоновой задачей (≈2 с), экран в это время живёт ----
@@ -344,7 +371,7 @@ static void wxTask(void*) {
     wxBuilding = false;
   }
 }
-static bool wxReady(int sc) { return wx::built && wx::stateIdx == sc; }
+static bool wxReady(int sc) { return wx::built && wx::stateIdx == sc && wx::builtFog == wx::fogKey(); }   // туман по видимости запекается в сцену
 static void wxStartBuild(int sc) { wxBuildIdx = sc; wxBuilding = true; xTaskNotifyGive(hWx); }
 static void wxWait() { while (wxBuilding) { esp_task_wdt_reset(); delay(10); } }
 #endif  // AIR_PRO
@@ -376,8 +403,8 @@ static void enter(Screen s) {
     case SCR_DASH: dash::setLive(live.v, live.ok); dash::begin(now); break;
     case SCR_PORTAL: drawPortal(); break;
 #if AIR_PRO
-    case SCR_FLIP: if (fade) { flipDim = !clk.ok; flip::dim = flipDim; flipMin = clk.ok ? clk.hh * 60 + clk.mm : 0; footerUpdate(); xfFlip = true; } else enterFlip(); break;
-    case SCR_AIR: { float iv[air::NK]; air::indexValues(live, iv); air::setLive(iv, live.ok); } air::begin(now); break;
+    case SCR_FLIP: if (fade) { flipDim = !clk.ok; flip::dim = flipDim; flipMin = clk.ok ? clk.hh * 60 + clk.mm : 0; footerUpdate(); xfFlip = true; flipSpun = false; } else enterFlip(); break;
+    case SCR_AIR: { float iv[air::NK]; air::indexValues(live, iv); air::setLive(iv, live.ok); } airOutdoor(); air::begin(now); break;
     case SCR_CHARTS:
       // данные свежее минуты — готовые кадры годятся; иначе берём новые сразу (первый кадр считается до начала перехода)
       charts::begin(now);
@@ -389,6 +416,7 @@ static void enter(Screen s) {
       if (!wxReady(sc)) { wxStartBuild(sc); wxWait(); }
       wxPendingShow = false;
       wx::setState(sc, (float)nowMs(), (float)(nowMs() / 1000.0), false);
+      wx::enter((float)nowMs());                  // светило поднимается из-за гор
     } break;
     case SCR_MARKETS: mkFill(); markets::begin(now); break;
 #endif
@@ -540,6 +568,7 @@ void loop() {
     if (c == 'n' && screen != SCR_PORTAL) pressSingle();
     else if (c == 'N' && screen != SCR_PORTAL) pressDouble();
     else if (c == 'r') gRefreshWanted = true;
+    else if (c == 'm') gMemProbe = true;   // замер памяти соединения бота (в задаче сети)
     else if (c == 'p' && screen != SCR_PORTAL) { gPortalWanted = true; enter(SCR_PORTAL); }   // веб-настройки без кнопки
     else if (c == 'd') {                         // показания сейчас
       static const char* nm[app::M_N] = {"T", "H", "CO2", "VOC", "NOx", "PM1", "PM2.5", "PM10"};
@@ -570,7 +599,7 @@ void loop() {
   // пришла новая погода — заранее собрать её сцену в фоне, пока пользователь на другом экране
   { app::Wx w; { Lock lk; w = G.wx; }     // сцена зависит и от времени (закат), поэтому считаем каждый проход
     wxWant = w.ok ? wxSceneOf(w) : WS_CLOUDY;
-    if (screen != SCR_WEATHER && !wxBuilding && !wxReady(wxWant)) wxStartBuild(wxWant); }
+    if (screen != SCR_WEATHER && !wxBuilding) { wxLiveFeed(); if (!wxReady(wxWant)) wxStartBuild(wxWant); } }   // видимость тоже: дымка запекается в сцену
 #endif
 
   switch (screen) {
@@ -581,20 +610,24 @@ void loop() {
 #if AIR_PRO
     case SCR_FLIP: {
       if (xfFlip) {                                                   // переход на часы: кадр целиком, пока старый экран растворяется
-        flip::begin(flipMin, (float)ms); footerDraw();
+        if (!flipSpun) { flip::beginSpin(flipMin, (float)ms); flipSpun = true; spinT0 = ms; spinFr = 0; } else flip::redrawAll((float)ms);
+        spinFr++;   // разгон стартует один раз, дальше идёт сквозь наплыв
+        footerDraw();
         if (!xfBlend((float)ms)) xfFlip = false;
         presentAll(); break;
       }
       if (flipDim != !clk.ok) { enterFlip(); break; }                 // время появилось (или пропало) — перерисовать целиком
       if (clk.ok && clk.hh * 60 + clk.mm != flipMin) { flipMin = clk.hh * 60 + clk.mm; flip::setM(flipMin, (float)ms, false); }
       int x0, x1; drew = false;
-      if (flip::frame((float)ms, x0, x1)) { present(x0, flip::RY0, x1 - x0, flip::RY1 - flip::RY0); drew = true; }
+      { const int64_t a = esp_timer_get_time(); const bool ch = flip::frame((float)ms, x0, x1); const int64_t b = esp_timer_get_time();
+        if (ch) { present(x0, flip::RY0, x1 - x0, flip::RY1 - flip::RY0); drew = true; if (spinT0 >= 0) { spinDrawUs += b - a; spinSendUs += esp_timer_get_time() - b; } } }
       if (footerUpdate()) { footerDraw(); present(0, flip::TY0, gx::W, flip::TY1 - flip::TY0); present(0, flip::FY0, gx::W, flip::FY1 - flip::FY0); drew = true; }
       if (flip::colonStep((float)ms)) { present(flip::CX0, flip::CY0, flip::CX1 - flip::CX0, flip::CY1 - flip::CY0); drew = true; }
+      if (spinT0 >= 0) { if (drew) spinFr++; if (!flip::busy()) { Serial.printf("[часы] разгон: %d кадров за %d мс (%d к/с), рисование %d мс, отправка %d мс\n", spinFr, (int)(ms - spinT0), (int)(spinFr * 1000.0 / fmax(1.0, ms - spinT0)), (int)(spinDrawUs / 1000), (int)(spinSendUs / 1000)); spinT0 = -1; spinDrawUs = spinSendUs = 0; } }
       if (!drew) delay(20);
     } break;
     case SCR_AIR:
-      { float iv[air::NK]; air::indexValues(live, iv); air::setLive(iv, live.ok); } hhmm(air::hhmm); hdate(air::date);
+      { float iv[air::NK]; air::indexValues(live, iv); air::setLive(iv, live.ok); } airOutdoor(); hhmm(air::hhmm); hdate(air::date);
       air::step((float)ms, dt); air::frame((float)t, (float)ms); xfBlend((float)ms); presentAll();
       break;
     case SCR_CHARTS:
@@ -614,7 +647,9 @@ void loop() {
         }
         wx::dataChanged();
       }
-      wx::step(dt, (float)t); wx::frame((float)t, (float)ms); xfBlend((float)ms); presentAll();
+      { app::Wx w; { Lock lk; w = G.wx; } char sb[24]; wxSubOf(w, sb, sizeof sb);   // время в строке города — каждую минуту
+        if (strcmp(sb, wx::D.sub)) { strlcpy(wx::D.sub, sb, sizeof wx::D.sub); wx::dataChanged(); } }
+      wxLiveFeed(); wx::step(dt, (float)t); wx::frame((float)t, (float)ms); xfBlend((float)ms); presentAll();
     } break;
     case SCR_MARKETS: {
       uint32_t seq; { Lock lk; seq = G.mkSeq; }

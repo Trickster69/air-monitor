@@ -3,7 +3,7 @@
 inline const char* const LANG_ES_TABLE[][2] = {
   // экран «Показатели» и общие подписи
   {"NO DATA", "SIN DATOS"}, {"WARNING", "ATENCIÓN"}, {"POOR", "MALO"}, {"GOOD", "BUENO"},
-  {"AIR ×1000", "AIRE ×1000"}, {"PARTICLES", "PARTÍCULAS"}, {"TEMP", "TEMP"}, {"HUMIDITY", "HUMEDAD"}, {"HUMID", "HUMED"},
+  {"AIR ×1000", "AIRE ×1000"}, {"PARTICLES", "PARTÍCULAS"}, {"TEMP", "TEMP"}, {"airing", "ventilando"}, {"temp.", "temp."}, {"humidity", "humedad"}, {"fresh", "aire fresco"}, {"time to air out", "hora de ventilar"}, {"stuffy", "aire cargado"}, {"Waiting for time over Wi-Fi", "Esperando la hora por Wi-Fi"}, {"HUMIDITY", "HUMEDAD"}, {"HUMID", "HUMED"},
   {"index", "índice"}, {"µg/m³", "µg/m³"}, {"TEMPERATURE", "TEMPERATURA"}, {"PARTICLES PM2.5", "PARTÍCULAS PM2.5"}, {"VOC · NOx", "VOC · NOx"},
   // экран настройки (QR)
   {"SETUP", "AJUSTES"}, {"from your phone", "desde el móvil"}, {"scan the", "escanea"}, {"QR code", "el código QR"},
@@ -21,7 +21,7 @@ inline const char* const LANG_ES_TABLE[][2] = {
   {"no data", "sin datos"}, {"breathe easy", "se respira bien"}, {"good", "bien"},
   {"too hot", "hace calor"}, {"a bit warm", "algo cálido"}, {"too cold", "hace frío"}, {"a bit cool", "algo fresco"},
   {"too humid", "muy húmedo"}, {"a bit humid", "algo húmedo"}, {"too dry", "muy seco"}, {"a bit dry", "algo seco"},
-  {"very dusty", "mucho polvo"}, {"a bit dusty", "algo de polvo"}, {"air is stuffy", "aire cargado"}, {"time to air out", "hora de ventilar"},
+  {"very dusty", "mucho polvo"}, {"TIME", "HORA"}, {"DATE", "FECHA"}, {"a bit warm — turn the heating down", "algo de calor — baja la calefacción"}, {"hot — %s outside, air out", "calor — fuera %s, ventila"}, {"a bit warm — %s outside, air out", "algo de calor — fuera %s, ventila"}, {"hot — close windows and blinds", "calor — cierra ventanas y persianas"}, {"cold — turn the AC down", "frío — baja el aire acondicionado"}, {"a bit cool — turn the AC down", "fresco — baja el aire acondicionado"}, {"cold — %s outside, air out", "frío — fuera %s, ventila"}, {"a bit cool — %s outside, air out", "fresco — fuera %s, ventila"}, {"cold — turn the heating on", "frío — enciende la calefacción"}, {"very humid — use a dehumidifier", "muy húmedo — usa deshumidificador"}, {"very humid", "muy húmedo"}, {"CO₂ is high — air out for 5 min", "CO₂ alto — ventila 5 minutos"}, {"CO₂ is rising — air out for 5 min", "CO₂ subiendo — ventila 5 minutos"}, {"odours building up — air out 5 min", "se acumulan olores — ventila 5 min"}, {"NOx is high — gas or exhaust", "NOx alto — gas o escape"}, {"air out", "ventila"}, {"stuffy", "cargado"}, {"below normal", "bajo lo normal"}, {"above normal", "sobre lo normal"}, {"low", "bajo"}, {"high", "alto"}, {"a bit dusty", "algo de polvo"}, {"air is stuffy", "aire cargado"}, {"time to air out", "hora de ventilar"},
   {"AIR INDEX", "ÍNDICE DEL AIRE"}, {"weak spot: %s", "punto débil: %s"},
   // индекс v2: стрелочный прибор, заголовок и подсказка
   {"No data", "Sin datos"}, {"sensors warming up", "sensores calentando"}, {"Breathe easy", "Se respira bien"}, {"Air is good", "Aire bueno"},

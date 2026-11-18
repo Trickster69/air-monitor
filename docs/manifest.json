@@ -1,6 +1,6 @@
 {
   "name": "Монитор воздуха (бесплатная)",
-  "version": "2.7",
+  "version": "2.8",
   "date": "18.11.2026",
   "new_install_prompt_erase": true,
   "builds": [

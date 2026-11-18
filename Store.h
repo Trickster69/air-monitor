@@ -25,7 +25,7 @@ enum Screen { SCR_FLIP, SCR_DASH, SCR_AIR, SCR_CHARTS, SCR_WEATHER, SCR_MARKETS,
 // события кнопки и просьбы от экрана к сети
 enum : uint8_t { EV_SHORT = 1, EV_LONG = 2, EV_DOUBLE = 3 };
 inline QueueHandle_t gBtnQ;
-inline volatile bool gPortalWanted = false, gPortalActive = false, gRefreshWanted = false, gRestartWanted = false;
+inline volatile bool gPortalWanted = false, gPortalActive = false, gRefreshWanted = false, gRestartWanted = false, gMemProbe = false;
 inline volatile uint32_t gFrames = 0, gWorstFrameMs = 0;
 inline volatile bool gMkEnabled = true;       // экран «Рынки» включён (копия cfg.mkEnabled для экрана)
 inline TaskHandle_t hUi, hSens, hNet, hPush;
